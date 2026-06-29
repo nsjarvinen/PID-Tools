@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P&amp;ID Standards Reference — Authoring Tool Foundation</title>
+<style>
+  /* ============================================================
+     P&ID STANDARDS REFERENCE
+     Self-contained. No external fonts, scripts, or assets.
+     Designed to open from a local file system on a managed laptop.
+     Visual language borrowed from the source drawing set:
+       - title-block header
+       - revision-stamp accents (red / blue, as on the as-builts)
+       - monospaced codes for tags and standard designations
+     ============================================================ */
+
+  :root{
+    --ink:        #1c1b19;   /* near-black drawing ink            */
+    --ink-soft:   #5a5954;   /* secondary text                    */
+    --ink-faint:  #8b8a84;   /* captions, meta                    */
+    --paper:      #ffffff;   /* sheet                             */
+    --panel:      #f5f6f7;   /* light call-out panel (cool grey)  */
+    --panel-2:    #eef0f1;
+    --rule:       #d7d8d6;   /* hairline                          */
+    --rule-strong:#b4b5b2;
+    --stamp:      #b23a2e;   /* revision / construction stamp red */
+    --asbuilt:    #1f5f8b;   /* as-built stamp blue               */
+    --stamp-tint: #f7ecea;
+    --blue-tint:  #eaf1f6;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, Cambria, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    --maxw: 1180px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ -webkit-text-size-adjust:100%; }
+
+  body{
+    margin:0;
+    background:
+      linear-gradient(0deg, transparent 0, transparent 100%),
+      var(--paper);
+    color:var(--ink);
+    font-family:var(--serif);
+    font-size:17px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 28px; }
+
+  /* ---------- Title block ------------------------------------ */
+  .titleblock{
+    border-bottom:2px solid var(--ink);
+    margin-top:34px;
+  }
+  .tb-eyebrow{
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--stamp);
+    margin:0 0 14px;
+  }
+  .tb-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:0;
+  }
+  .tb-title{
+    font-family:var(--sans);
+    font-weight:800;
+    letter-spacing:-0.015em;
+    line-height:1.04;
+    font-size:clamp(30px, 5.4vw, 52px);
+    margin:0 0 4px;
+    text-transform:uppercase;
+  }
+  .tb-sub{
+    font-family:var(--serif);
+    font-style:italic;
+    color:var(--ink-soft);
+    font-size:clamp(16px,2.1vw,20px);
+    margin:0 0 22px;
+    max-width:62ch;
+  }
+  .tb-meta{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0,1fr));
+    border-top:1px solid var(--rule);
+    border-left:1px solid var(--rule);
+    font-family:var(--mono);
+    font-size:11px;
+    margin-bottom:-1px;
+  }
+  .tb-cell{
+    border-right:1px solid var(--rule);
+    border-bottom:1px solid var(--rule);
+    padding:9px 12px;
+  }
+  .tb-cell .k{
+    display:block;
+    color:var(--ink-faint);
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-size:9.5px;
+    margin-bottom:3px;
+  }
+  .tb-cell .v{ color:var(--ink); font-size:12px; }
+  .tb-cell .v.stamp{ color:var(--stamp); font-weight:700; }
+
+  /* ---------- Stamp ------------------------------------------ */
+  .stamp-row{ position:relative; }
+  .asbuilt-stamp{
+    position:absolute;
+    right:0; top:18px;
+    transform:rotate(-7deg);
+    border:2px solid var(--asbuilt);
+    color:var(--asbuilt);
+    font-family:var(--sans);
+    font-weight:800;
+    letter-spacing:.06em;
+    font-size:13px;
+    padding:5px 12px 4px;
+    opacity:.85;
+    text-transform:uppercase;
+    pointer-events:none;
+  }
+  @media (max-width:720px){ .asbuilt-stamp{ display:none; } }
+
+  /* ---------- Layout: content + sticky contents -------------- */
+  .layout{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:46px;
+    margin:42px 0 80px;
+  }
+  @media (min-width:1000px){
+    .layout{ grid-template-columns: 220px 1fr; gap:54px; }
+  }
+
+  /* ---------- Contents nav ----------------------------------- */
+  .toc{ align-self:start; }
+  @media (min-width:1000px){
+    .toc{ position:sticky; top:24px; }
+  }
+  .toc h2{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    border-bottom:1px solid var(--rule);
+    padding-bottom:8px;
+    margin:0 0 12px;
+  }
+  .toc ol{ list-style:none; margin:0; padding:0; counter-reset:toc; }
+  .toc li{ margin:0 0 2px; }
+  .toc a{
+    display:block;
+    font-family:var(--sans);
+    font-size:13.5px;
+    line-height:1.35;
+    color:var(--ink-soft);
+    text-decoration:none;
+    padding:5px 8px 5px 0;
+    border-bottom:1px solid transparent;
+  }
+  .toc a:hover{ color:var(--stamp); }
+  .toc .num{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--asbuilt);
+    margin-right:8px;
+  }
+
+  /* ---------- Content body ----------------------------------- */
+  .content > section{ margin-bottom:54px; scroll-margin-top:18px; }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--asbuilt);
+    margin:0 0 10px;
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+  }
+  .eyebrow .ec{
+    color:var(--stamp);
+    font-size:11px;
+  }
+
+  h2.sec{
+    font-family:var(--sans);
+    font-weight:800;
+    letter-spacing:-0.01em;
+    font-size:clamp(23px,3.4vw,32px);
+    line-height:1.1;
+    margin:0 0 16px;
+  }
+  h3.sub{
+    font-family:var(--sans);
+    font-weight:700;
+    font-size:18px;
+    letter-spacing:-0.005em;
+    margin:30px 0 8px;
+  }
+
+  p{ margin:0 0 15px; max-width:74ch; }
+  .lead{ font-size:19px; color:var(--ink); }
+  .content a{ color:var(--asbuilt); text-decoration:none; border-bottom:1px solid var(--rule-strong); }
+  .content a:hover{ border-bottom-color:var(--asbuilt); }
+
+  code, .code{
+    font-family:var(--mono);
+    font-size:.86em;
+    background:var(--panel-2);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:1px 5px;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  .std{
+    font-family:var(--mono);
+    font-size:.9em;
+    font-weight:600;
+    color:var(--ink);
+    letter-spacing:.01em;
+    white-space:nowrap;
+  }
+
+  /* ---------- Lead-in section -------------------------------- */
+  .scope{
+    background:var(--panel);
+    border:1px solid var(--rule);
+    border-left:3px solid var(--ink);
+    padding:22px 26px;
+    margin:0 0 8px;
+  }
+  .scope p{ margin-bottom:10px; }
+  .scope p:last-child{ margin-bottom:0; }
+
+  /* ---------- Three-layer overview --------------------------- */
+  .layers{
+    display:grid;
+    grid-template-columns:1fr;
+    border:1px solid var(--rule);
+    margin:22px 0 0;
+  }
+  @media (min-width:760px){
+    .layers{ grid-template-columns:repeat(3,1fr); }
+  }
+  .layer-card{
+    padding:20px 20px 22px;
+    border-bottom:1px solid var(--rule);
+  }
+  @media (min-width:760px){
+    .layer-card{ border-bottom:none; border-right:1px solid var(--rule); }
+    .layer-card:last-child{ border-right:none; }
+  }
+  .layer-card .ln{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--asbuilt);
+    letter-spacing:.12em;
+  }
+  .layer-card h4{
+    font-family:var(--sans);
+    font-weight:800;
+    font-size:16px;
+    margin:6px 0 6px;
+    text-transform:uppercase;
+    letter-spacing:.01em;
+  }
+  .layer-card p{ font-size:14px; line-height:1.5; margin:0; color:var(--ink-soft); }
+  .layer-card .maps{
+    margin-top:12px;
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--stamp);
+    border-top:1px dotted var(--rule-strong);
+    padding-top:10px;
+  }
+
+  /* ---------- Build-consequence note ------------------------- */
+  .note{
+    margin:20px 0 4px;
+    border:1px solid var(--rule);
+    background:var(--blue-tint);
+    border-left:3px solid var(--asbuilt);
+    padding:16px 20px;
+  }
+  .note .flag{
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--asbuilt);
+    display:block;
+    margin-bottom:6px;
+  }
+  .note p{ margin:0; font-size:15px; line-height:1.55; }
+
+  /* ---------- Pinjarra grounding callout --------------------- */
+  .ground{
+    margin:18px 0;
+    border:1px dashed var(--rule-strong);
+    background:var(--stamp-tint);
+    padding:14px 18px;
+  }
+  .ground .flag{
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--stamp);
+    display:block;
+    margin-bottom:5px;
+  }
+  .ground p{ margin:0; font-size:14.5px; line-height:1.55; color:var(--ink); }
+
+  /* ---------- Standards register table ----------------------- */
+  .register-wrap{ overflow-x:auto; border:1px solid var(--rule); margin-top:8px; }
+  table.register{
+    border-collapse:collapse;
+    width:100%;
+    min-width:680px;
+    font-size:13.5px;
+  }
+  table.register thead th{
+    background:var(--ink);
+    color:#fff;
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    text-align:left;
+    padding:9px 12px;
+    font-weight:600;
+  }
+  table.register td{
+    border-bottom:1px solid var(--rule);
+    border-right:1px solid var(--rule);
+    padding:10px 12px;
+    vertical-align:top;
+    line-height:1.42;
+  }
+  table.register td:last-child{ border-right:none; }
+  table.register tr:nth-child(even) td{ background:#fafbfb; }
+  table.register .desig{ font-family:var(--mono); font-weight:600; white-space:nowrap; font-size:12.5px; }
+  table.register .layer-tag{
+    font-family:var(--mono); font-size:10px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink-faint);
+  }
+  .pill{
+    display:inline-block; font-family:var(--mono); font-size:10px;
+    padding:2px 7px; border-radius:10px; letter-spacing:.04em;
+    text-transform:uppercase; border:1px solid var(--rule-strong);
+  }
+  .pill.cur{ color:#2f6b3a; border-color:#bcd6c1; background:#eef6ef; }
+  .pill.leg{ color:var(--stamp); border-color:#e3c4bf; background:var(--stamp-tint); }
+  .pill.ref{ color:var(--asbuilt); border-color:#bcd2e0; background:var(--blue-tint); }
+
+  /* ---------- Module-boundary summary ------------------------ */
+  .modules{ counter-reset:mod; margin-top:14px; border-top:1px solid var(--rule); }
+  .module{
+    display:grid; grid-template-columns:auto 1fr; gap:18px;
+    padding:18px 0; border-bottom:1px solid var(--rule);
+  }
+  .module .mn{
+    counter-increment:mod;
+    font-family:var(--mono); font-size:13px; color:var(--asbuilt);
+    font-weight:700; padding-top:3px; white-space:nowrap;
+  }
+  .module .mn::before{ content:"M" counter(mod); }
+  .module h4{ font-family:var(--sans); font-weight:800; font-size:16.5px; margin:0 0 5px; }
+  .module p{ margin:0; font-size:14.5px; color:var(--ink-soft); line-height:1.5; }
+
+  /* ---------- Sources ---------------------------------------- */
+  .sources ul{ list-style:none; margin:0; padding:0; }
+  .sources li{
+    border-bottom:1px solid var(--rule);
+    padding:9px 0;
+    font-size:13.5px;
+    line-height:1.45;
+    display:grid; grid-template-columns:auto 1fr; gap:14px;
+  }
+  .sources li .tag{
+    font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);
+    letter-spacing:.06em; white-space:nowrap; padding-top:2px;
+  }
+
+  .disclaimer{
+    margin-top:26px;
+    font-size:12.5px;
+    color:var(--ink-faint);
+    font-style:italic;
+    line-height:1.5;
+    max-width:80ch;
+  }
+
+  /* ---------- Footer ----------------------------------------- */
+  footer{
+    border-top:2px solid var(--ink);
+    padding:18px 0 60px;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    letter-spacing:.04em;
+    display:flex; flex-wrap:wrap; gap:6px 28px; justify-content:space-between;
+  }
+
+  hr.thin{ border:none; border-top:1px solid var(--rule); margin:34px 0; }
+
+  /* ---------- Print ------------------------------------------ */
+  @media print{
+    body{ font-size:11pt; }
+    .toc, .asbuilt-stamp{ display:none; }
+    .layout{ grid-template-columns:1fr; gap:0; margin-top:20px; }
+    .content > section{ break-inside:avoid; margin-bottom:24px; }
+    .note, .ground, .scope, .layer-card, table.register{ break-inside:avoid; }
+    a{ color:var(--ink) !important; border:none !important; }
+    .register-wrap{ overflow:visible; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ===================== TITLE BLOCK ===================== -->
+  <header class="titleblock stamp-row">
+    <div class="asbuilt-stamp">Working Reference</div>
+    <p class="tb-eyebrow">P&amp;ID Authoring Tool · Standards Foundation</p>
+    <div class="tb-grid">
+      <h1 class="tb-title">P&amp;ID Standards Reference</h1>
+      <p class="tb-sub">The international standards that govern symbols, identification, and data exchange for piping &amp; instrumentation diagrams — and how each one shapes a single-file HTML authoring tool.</p>
+    </div>
+    <div class="tb-meta">
+      <div class="tb-cell"><span class="k">Document</span><span class="v">PID-STD-REF</span></div>
+      <div class="tb-cell"><span class="k">Revision</span><span class="v stamp">0</span></div>
+      <div class="tb-cell"><span class="k">Date</span><span class="v">2026-06-29</span></div>
+      <div class="tb-cell"><span class="k">Grounded in</span><span class="v">Pinjarra Unit 1 as-builts</span></div>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- ===================== CONTENTS ===================== -->
+    <nav class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#scope"><span class="num">00</span>Scope &amp; the three-layer model</a></li>
+        <li><a href="#layer1"><span class="num">01</span>Symbols — the render library</a></li>
+        <li><a href="#layer2"><span class="num">02</span>Identification — the tagging engine</a></li>
+        <li><a href="#layer3"><span class="num">03</span>Data exchange — the database layer</a></li>
+        <li><a href="#register"><span class="num">04</span>Standards register</a></li>
+        <li><a href="#build"><span class="num">05</span>What this means for the build</a></li>
+        <li><a href="#sources"><span class="num">06</span>Sources &amp; notes</a></li>
+      </ol>
+    </nav>
+
+    <!-- ===================== CONTENT ===================== -->
+    <main class="content">
+
+      <!-- ---------- SCOPE ---------- -->
+      <section id="scope">
+        <p class="eyebrow"><span class="ec">00</span> Orientation</p>
+        <h2 class="sec">Scope &amp; the three-layer model</h2>
+        <div class="scope">
+          <p>This reference collects the standards that matter when building a portable, single-file HTML tool for authoring process P&amp;IDs for power generation plant. It is written against a real sample: the as-built P&amp;ID set for <strong>Alinta Cogeneration (Pinjarra) Unit 1</strong>, a Downer / Mitsubishi consortium project — specifically the HP economisers sheet, the cooling-water sheet, and the symbol-and-legend sheet.</p>
+          <p>That set is instructive because it is a <em>hybrid</em>: ISA-style instrument bubbles, KKS-style equipment tags, and an ISO/DIN-flavoured general symbol set, all on the one drawing. A tool serving this asset base has to speak all three.</p>
+        </div>
+
+        <p class="lead" style="margin-top:24px;">The standards sort into three layers, and they map cleanly onto three modules the programme needs anyway: what the shapes <em>mean</em>, how things are <em>named</em>, and how the data <em>travels</em>.</p>
+
+        <div class="layers">
+          <div class="layer-card">
+            <span class="ln">LAYER 01</span>
+            <h4>Symbols</h4>
+            <p>The canonical shapes for instruments, valves, equipment, and line types — the visual vocabulary a reader decodes.</p>
+            <div class="maps">→ Render registry</div>
+          </div>
+          <div class="layer-card">
+            <span class="ln">LAYER 02</span>
+            <h4>Identification</h4>
+            <p>The tag and reference-designation rules that give every object a unique, structured name.</p>
+            <div class="maps">→ Tagging engine</div>
+          </div>
+          <div class="layer-card">
+            <span class="ln">LAYER 03</span>
+            <h4>Data exchange</h4>
+            <p>The open data model that carries graphics, topology, and attributes between tools and into databases.</p>
+            <div class="maps">→ Data model</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- LAYER 1 ---------- -->
+      <section id="layer1">
+        <p class="eyebrow"><span class="ec">01</span> What the shapes mean</p>
+        <h2 class="sec">Symbols — the render library</h2>
+
+        <p>The canonical symbol-and-identification standard — and the one the legend sheet is built on — is <span class="std">ANSI/ISA-5.1</span>. It was revised and ANSI-approved in mid-2024, with the title changing to <em>“Instrumentation and Control — Symbols and Identification”</em> to acknowledge that modern work is about integrated control functions rather than individual instruments. First published in 1949, it remains the most widely used standard of its kind. The 2024 edition is now accompanied by two technical reports — <span class="std">ISA-TR5.1.02</span> (identification guidelines) and <span class="std">ISA-TR5.1.03</span> (graphic symbol guidelines) — which carry much of the explanatory material that used to live in the annexes.</p>
+
+        <p>The instrument letter-code system is the heart of it: a first letter for the measured or initiating variable (A analysis, F flow, L level, P pressure, T temperature, and so on) followed by succeeding letters for the readout or output function (I indicate, T transmit, C control, etc.), then a loop number. <code>FIC045</code> is the flow indicating controller in loop 045; <code>FT045</code> is the flow transmitter in the same loop.</p>
+
+        <div class="ground">
+          <span class="flag">◢ On the Pinjarra set</span>
+          <p>The letter-code table on the symbol-and-legend sheet (XP-101) is exactly this ISA-5.1 identification system. The instrument bubbles throughout the HP economiser and cooling-water sheets follow its function/location conventions.</p>
+        </div>
+
+        <h3 class="sub">The non-instrument graphics</h3>
+        <p>For valves, equipment, line types, and fittings, the international references are <span class="std">ISO 14617</span> (graphical symbols for diagrams — a multi-part set, with part 6 covering measurement and control symbols that align with ISA) and <span class="std">ISO 10628</span> (flow diagrams for process plants). Underlying many of these is <span class="std">IEC 60617</span>, a very large graphical-symbol database, while <span class="std">ISO 15519</span> specifies the diagram conventions for the process industry. Regionally, <span class="std">DIN 28004</span> and <span class="std">BS 5070</span> still appear on European-consortium jobs — relevant here, since a Mitsubishi/Downer house style is likely DIN-influenced even where it leans on ISA.</p>
+
+        <div class="note">
+          <span class="flag">▸ Build consequence</span>
+          <p>Don’t hard-code symbols as fixed SVG. Each symbol is a <strong>registered component type</strong> — an SVG render function plus a field schema — so a new symbol is one self-contained module that registers itself. The standards above simply give you the canonical set to seed that library.</p>
+        </div>
+      </section>
+
+      <!-- ---------- LAYER 2 ---------- -->
+      <section id="layer2">
+        <p class="eyebrow"><span class="ec">02</span> How things are named</p>
+        <h2 class="sec">Identification — the tagging engine</h2>
+
+        <p>This is where the sample drawings are genuinely hybrid, and it forces a real design decision. The instrument bubbles use ISA-5.1 loop-style tags, but the equipment is tagged in <strong>KKS</strong> — the <em>Kraftwerk-Kennzeichensystem</em>, or power-station identification system. Tags such as <code>P1HAC34AC110</code>, <code>P1PCD05AC005</code>, and <code>P1PCC10AP010</code> are KKS designations: a block/unit prefix, a function (system) code, an equipment-unit code, and a component code.</p>
+
+        <p>The current English edition is the VGB 8th revised edition (2018). KKS is being superseded by <strong>RDS-PP</strong> (Reference Designation System for Power Plants), which is built on the <span class="std">ISO/IEC 81346</span> structuring-and-reference-designation series — specifically <span class="std">81346-10</span> for power plants (formerly ISO/TS 16952-10). Within that series, <span class="std">81346-1</span> gives the basic rules and <span class="std">81346-2</span> the classification letter codes for object classes. RDS-PP also draws in companion standards for signals (<span class="std">IEC 81175</span>), connections, and document classification (<span class="std">IEC 61355</span>).</p>
+
+        <div class="ground">
+          <span class="flag">◢ On the Pinjarra set — and why it matters</span>
+          <p>Existing KKS-coded plants are <strong>not</strong> recoded to RDS-PP; KKS continues to be applied for additions, conversions, and I&amp;C retrofits. A tool serving an asset like Pinjarra must therefore speak KKS natively, not only its successor.</p>
+        </div>
+
+        <div class="note">
+          <span class="flag">▸ Build consequence</span>
+          <p>Tagging must be a <strong>pluggable scheme</strong>, not baked in. A chemical plant wants ISA loop numbers; a power station wants KKS or RDS-PP. Make the identifier a strategy module the user selects, each carrying its own validation and parsing rules. The research has just handed you this module boundary.</p>
+        </div>
+      </section>
+
+      <!-- ---------- LAYER 3 ---------- -->
+      <section id="layer3">
+        <p class="eyebrow"><span class="ec">03</span> How the data travels</p>
+        <h2 class="sec">Data exchange — the database layer</h2>
+
+        <p>This is the layer that speaks directly to the goal of attaching database-ready data to each model component, and it has matured at the right moment. The relevant standard is <strong>DEXPI</strong> (Data Exchange in the Process Industry): a vendor-neutral, open data model for P&amp;IDs that functions as a pragmatic implementation of <span class="std">ISO 15926</span>, focused on high-fidelity transfer of graphics, topology, and metadata. It is serialised through the <strong>Proteus XML</strong> schema. <span class="std">DEXPI Specification 2.0</span> was released in late 2025 with a unified XML serialisation format.</p>
+
+        <p>DEXPI models precisely what you would want hanging off each component: equipment data, pipeline and segment data with plant-wide unique numbering, instrumentation, and the topology — the logical connectivity — between objects. On the instrumentation side it reconciles ISA-5.1 with <span class="std">IEC 62424</span>, the standard for representing process-control requests in P&amp;IDs and exchanging them with control-engineering tools. (IEC 62424’s CAEX data format is also the ancestor of AutomationML, <span class="std">IEC 62714</span>.)</p>
+
+        <div class="note">
+          <span class="flag">▸ Build consequence</span>
+          <p>You almost certainly don’t want to implement full Proteus XML now — but let DEXPI <strong>shape</strong> the data model so a future export is a mapping job, not a re-architecture. Each component carries a stable ID, a class that can map to a DEXPI / ISO 15926 class, explicit topology references (this nozzle connects to that segment), and a generic-attributes bag for the domain data. The graphic is a <strong>projection</strong> of that record, never the source of truth.</p>
+        </div>
+      </section>
+
+      <!-- ---------- REGISTER ---------- -->
+      <section id="register">
+        <p class="eyebrow"><span class="ec">04</span> At a glance</p>
+        <h2 class="sec">Standards register</h2>
+        <p>A working schedule of the standards in scope. Status is indicative: <span class="pill cur">current</span> in force, <span class="pill leg">legacy</span> superseded but still applied, <span class="pill ref">reference</span> foundational / underlying.</p>
+
+        <div class="register-wrap">
+          <table class="register">
+            <thead>
+              <tr>
+                <th style="min-width:130px;">Designation</th>
+                <th>Title / role</th>
+                <th style="min-width:90px;">Layer</th>
+                <th style="min-width:96px;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="desig">ANSI/ISA-5.1-2024</td>
+                <td>Instrumentation and control symbols and identification — the instrument bubble + letter-code system.</td>
+                <td class="layer-tag">Symbols</td>
+                <td><span class="pill cur">current</span></td>
+              </tr>
+              <tr>
+                <td class="desig">ISA-TR5.1.02 / .03</td>
+                <td>Companion technical reports: identification and graphic-symbol guidance.</td>
+                <td class="layer-tag">Symbols</td>
+                <td><span class="pill cur">current</span></td>
+              </tr>
+              <tr>
+                <td class="desig">ISO 14617</td>
+                <td>Graphical symbols for diagrams (multi-part); part 6 = measurement &amp; control.</td>
+                <td class="layer-tag">Symbols</td>
+                <td><span class="pill cur">current</span></td>
+              </tr>
+              <tr>
+                <td class="desig">ISO 10628</td>
+                <td>Diagrams for the chemical &amp; petrochemical industry / process-plant flow diagrams.</td>
+                <td class="layer-tag">Symbols</td>
+                <td><span class="pill cur">current</span></td>
+              </tr>
+              <tr>
+                <td class="desig">IEC 60617</td>
+                <td>Graphical symbols for diagrams — the large underlying symbol database.</td>
+                <td class="layer-tag">Symbols</td>
+                <td><span class="pill ref">reference</span></td>
+              </tr>
+              <tr>
+                <td class="desig">ISO 15519</td>
+                <td>Specification for diagrams for the process industry (conventions).</td>
+                <td class="layer-tag">Symbols</td>
+                <td><span class="pill ref">reference</span></td>
+              </tr>
+              <tr>
+                <td class="desig">DIN 28004 / BS 5070</td>
+                <td>Regional symbol conventions seen on European-consortium drawing sets.</td>
+                <td class="layer-tag">Symbols</td>
+                <td><span class="pill ref">reference</span></td>
+              </tr>
+              <tr>
+                <td class="desig">KKS (VGB-S-811, 8th ed. 2018)</td>
+                <td>Power-station identification system — the equipment tags on the sample set.</td>
+                <td class="layer-tag">Identification</td>
+                <td><span class="pill leg">legacy</span></td>
+              </tr>
+              <tr>
+                <td class="desig">RDS-PP (VGB)</td>
+                <td>Reference Designation System for Power Plants — KKS successor.</td>
+                <td class="layer-tag">Identification</td>
+                <td><span class="pill cur">current</span></td>
+              </tr>
+              <tr>
+                <td class="desig">ISO/IEC 81346 (-1/-2/-10)</td>
+                <td>Structuring principles &amp; reference designations; -10 = power plants.</td>
+                <td class="layer-tag">Identification</td>
+                <td><span class="pill cur">current</span></td>
+              </tr>
+              <tr>
+                <td class="desig">IEC 81175 / IEC 61355</td>
+                <td>Designation of signals; classification &amp; designation of documents.</td>
+                <td class="layer-tag">Identification</td>
+                <td><span class="pill ref">reference</span></td>
+              </tr>
+              <tr>
+                <td class="desig">DEXPI Spec 2.0 (2025)</td>
+                <td>Open, vendor-neutral P&amp;ID data model — the database/exchange target.</td>
+                <td class="layer-tag">Data exchange</td>
+                <td><span class="pill cur">current</span></td>
+              </tr>
+              <tr>
+                <td class="desig">Proteus XML</td>
+                <td>Serialisation schema used to implement DEXPI.</td>
+                <td class="layer-tag">Data exchange</td>
+                <td><span class="pill cur">current</span></td>
+              </tr>
+              <tr>
+                <td class="desig">ISO 15926</td>
+                <td>Integration of life-cycle data for process plants — DEXPI’s semantic basis.</td>
+                <td class="layer-tag">Data exchange</td>
+                <td><span class="pill ref">reference</span></td>
+              </tr>
+              <tr>
+                <td class="desig">IEC 62424</td>
+                <td>Process-control requests in P&amp;IDs; exchange with PCE tools (CAEX).</td>
+                <td class="layer-tag">Data exchange</td>
+                <td><span class="pill ref">reference</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ---------- BUILD ---------- -->
+      <section id="build">
+        <p class="eyebrow"><span class="ec">05</span> From standards to architecture</p>
+        <h2 class="sec">What this means for the build</h2>
+
+        <p>The research hands us three clean module boundaries, with one underlying principle holding them together: <strong>the data is the source of truth and the graphic is a projection of it</strong>. If the SVG holds the state, you can never cleanly export; if a plain data model holds the state and the graphic renders from it, export becomes serialisation rather than a retrofit.</p>
+
+        <div class="modules">
+          <div class="module">
+            <div class="mn"></div>
+            <div>
+              <h4>Symbol / render registry</h4>
+              <p>Each symbol is a registered component type — an SVG render function plus a declared field schema. Adding a type touches nothing else. The field schema a component declares <em>is</em> its future database table.</p>
+            </div>
+          </div>
+          <div class="module">
+            <div class="mn"></div>
+            <div>
+              <h4>Pluggable tagging engine</h4>
+              <p>Identification is a strategy module the user selects — ISA loop numbers, KKS, or RDS-PP — each with its own parsing and validation. The tool must read and write KKS to serve existing power-station assets.</p>
+            </div>
+          </div>
+          <div class="module">
+            <div class="mn"></div>
+            <div>
+              <h4>DEXPI-shaped data model</h4>
+              <p>Every component carries a stable ID, a class, explicit topology references, and a generic-attributes bag — geometry/visual attributes kept in a separate namespace from domain attributes. Committing to this shape now keeps every database route open: export, embedded, or server-backed later.</p>
+            </div>
+          </div>
+        </div>
+
+        <p style="margin-top:22px;">The single decision worth making deliberately up front is the third. A DEXPI-flavoured record shape costs almost nothing now and is expensive to retrofit — which is exactly why the export-vs-embedded-vs-server database question can wait.</p>
+      </section>
+
+      <!-- ---------- SOURCES ---------- -->
+      <section id="sources" class="sources">
+        <p class="eyebrow"><span class="ec">06</span> Provenance</p>
+        <h2 class="sec">Sources &amp; notes</h2>
+        <p>Standards facts below were verified against current public sources (June 2026). The standards themselves are copyright to their issuing bodies and are not reproduced here; this document paraphrases scope and status only.</p>
+        <ul>
+          <li><span class="tag">ISA</span><span>ANSI/ISA-5.1-2024 edition, title change, and companion technical reports — International Society of Automation (isa.org) and ANSI.</span></li>
+          <li><span class="tag">ISO/IEC</span><span>ISO 14617, ISO 10628, ISO 15519, IEC 60617 — scope and roles per ISO/IEC catalogue summaries and engineering references.</span></li>
+          <li><span class="tag">KKS/RDS-PP</span><span>KKS 8th revised edition (2018) and RDS-PP basis on ISO/IEC 81346-10 — VGB / vgbe energy and reference-designation guidance.</span></li>
+          <li><span class="tag">81346</span><span>ISO/IEC 81346 structuring principles and the -1 / -2 / -10 parts; companion IEC 81175 and IEC 61355.</span></li>
+          <li><span class="tag">DEXPI</span><span>DEXPI Specification 2.0 (late 2025), Proteus XML implementation, ISO 15926 basis, and ISA-5.1 / IEC 62424 reconciliation — dexpi.org, OPC Foundation, and ARC Advisory.</span></li>
+          <li><span class="tag">Sample set</span><span>Alinta Cogeneration (Pinjarra) Unit 1 as-built P&amp;IDs (Downer / Mitsubishi): HP economisers, cooling-water system, and symbol &amp; legend sheets.</span></li>
+        </ul>
+
+        <p class="disclaimer">Editions and statuses change. Before relying on any clause for a deliverable, confirm the current edition with the issuing body — particularly for ISA-5.1, the 81346 series, and DEXPI, all of which are under active revision. Where a project specifies a house standard, the project standard governs.</p>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    <span>P&amp;ID STANDARDS REFERENCE · REV 0</span>
+    <span>WORKING REFERENCE — CONFIRM EDITIONS BEFORE USE</span>
+    <span>2026-06-29</span>
+  </footer>
+
+</div>
+</body>
+</html>

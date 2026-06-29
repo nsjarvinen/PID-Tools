@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P&amp;ID Authoring Tool — Functional Requirements</title>
+<style>
+  /* ============================================================
+     P&ID AUTHORING TOOL — FUNCTIONAL REQUIREMENTS
+     Companion to the Standards Reference. Same house style.
+     Self-contained: no external fonts, scripts, or assets.
+     ============================================================ */
+
+  :root{
+    --ink:#1c1b19; --ink-soft:#5a5954; --ink-faint:#8b8a84;
+    --paper:#ffffff; --panel:#f5f6f7; --panel-2:#eef0f1;
+    --rule:#d7d8d6; --rule-strong:#b4b5b2;
+    --stamp:#b23a2e; --asbuilt:#1f5f8b;
+    --stamp-tint:#f7ecea; --blue-tint:#eaf1f6; --green-tint:#eef6ef;
+
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,Cambria,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --maxw:1180px;
+  }
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--serif); font-size:17px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 28px; }
+
+  /* ---- Title block ---- */
+  .titleblock{ border-bottom:2px solid var(--ink); margin-top:34px; }
+  .tb-eyebrow{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--stamp); margin:0 0 14px;
+  }
+  .tb-title{
+    font-family:var(--sans); font-weight:800; letter-spacing:-0.015em;
+    line-height:1.04; font-size:clamp(28px,5vw,50px); margin:0 0 4px;
+    text-transform:uppercase;
+  }
+  .tb-sub{
+    font-family:var(--serif); font-style:italic; color:var(--ink-soft);
+    font-size:clamp(16px,2.1vw,20px); margin:0 0 22px; max-width:64ch;
+  }
+  .tb-meta{
+    display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+    border-top:1px solid var(--rule); border-left:1px solid var(--rule);
+    font-family:var(--mono); font-size:11px; margin-bottom:-1px;
+  }
+  .tb-cell{ border-right:1px solid var(--rule); border-bottom:1px solid var(--rule); padding:9px 12px; }
+  .tb-cell .k{ display:block; color:var(--ink-faint); letter-spacing:.12em; text-transform:uppercase; font-size:9.5px; margin-bottom:3px; }
+  .tb-cell .v{ color:var(--ink); font-size:12px; }
+  .tb-cell .v.stamp{ color:var(--stamp); font-weight:700; }
+  .stamp-row{ position:relative; }
+  .asbuilt-stamp{
+    position:absolute; right:0; top:18px; transform:rotate(-7deg);
+    border:2px solid var(--asbuilt); color:var(--asbuilt);
+    font-family:var(--sans); font-weight:800; letter-spacing:.06em;
+    font-size:13px; padding:5px 12px 4px; opacity:.85;
+    text-transform:uppercase; pointer-events:none;
+  }
+  @media (max-width:720px){ .asbuilt-stamp{ display:none; } }
+
+  /* ---- Layout ---- */
+  .layout{ display:grid; grid-template-columns:1fr; gap:46px; margin:42px 0 80px; }
+  @media (min-width:1000px){ .layout{ grid-template-columns:230px 1fr; gap:54px; } }
+
+  /* ---- TOC ---- */
+  .toc{ align-self:start; }
+  @media (min-width:1000px){ .toc{ position:sticky; top:24px; } }
+  .toc h2{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--ink-faint);
+    border-bottom:1px solid var(--rule); padding-bottom:8px; margin:0 0 12px;
+  }
+  .toc ol{ list-style:none; margin:0; padding:0; }
+  .toc li{ margin:0 0 2px; }
+  .toc a{
+    display:block; font-family:var(--sans); font-size:13px; line-height:1.32;
+    color:var(--ink-soft); text-decoration:none; padding:4px 8px 4px 0;
+  }
+  .toc a:hover{ color:var(--stamp); }
+  .toc .num{ font-family:var(--mono); font-size:10.5px; color:var(--asbuilt); margin-right:8px; }
+
+  /* ---- Content ---- */
+  .content > section{ margin-bottom:54px; scroll-margin-top:18px; }
+  .eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--asbuilt); margin:0 0 10px;
+    display:flex; align-items:baseline; gap:12px;
+  }
+  .eyebrow .ec{ color:var(--stamp); }
+  h2.sec{
+    font-family:var(--sans); font-weight:800; letter-spacing:-0.01em;
+    font-size:clamp(22px,3.3vw,31px); line-height:1.1; margin:0 0 16px;
+  }
+  h3.sub{ font-family:var(--sans); font-weight:700; font-size:18px; margin:30px 0 8px; }
+  h4.area{
+    font-family:var(--sans); font-weight:800; font-size:16.5px; margin:26px 0 6px;
+    display:flex; align-items:baseline; gap:10px;
+  }
+  h4.area .acode{
+    font-family:var(--mono); font-size:12px; color:#fff; background:var(--ink);
+    padding:2px 8px; border-radius:3px; letter-spacing:.04em;
+  }
+  p{ margin:0 0 15px; max-width:74ch; }
+  .lead{ font-size:19px; color:var(--ink); }
+  .content a{ color:var(--asbuilt); text-decoration:none; border-bottom:1px solid var(--rule-strong); }
+  .content a:hover{ border-bottom-color:var(--asbuilt); }
+  code,.code{
+    font-family:var(--mono); font-size:.86em; background:var(--panel-2);
+    border:1px solid var(--rule); border-radius:3px; padding:1px 5px;
+    color:var(--ink); white-space:nowrap;
+  }
+  em.term{ font-style:italic; color:var(--ink); font-weight:600; }
+
+  .scope{ background:var(--panel); border:1px solid var(--rule); border-left:3px solid var(--ink); padding:22px 26px; margin:0 0 8px; }
+  .scope p:last-child{ margin-bottom:0; }
+
+  /* ---- Pipeline (workflow) ---- */
+  .pipeline{ display:grid; grid-template-columns:1fr; border:1px solid var(--rule); margin:22px 0 0; }
+  @media (min-width:680px){ .pipeline{ grid-template-columns:repeat(4,1fr); } }
+  .pl-step{ padding:16px 16px 18px; border-bottom:1px solid var(--rule); }
+  @media (min-width:680px){ .pl-step{ border-bottom:none; border-right:1px solid var(--rule); } .pl-step:last-child{ border-right:none; } }
+  .pl-step .plc{ font-family:var(--mono); font-size:10.5px; color:var(--asbuilt); letter-spacing:.1em; }
+  .pl-step h5{ font-family:var(--sans); font-weight:800; font-size:14.5px; margin:5px 0 5px; text-transform:uppercase; }
+  .pl-step p{ font-size:13px; line-height:1.45; margin:0; color:var(--ink-soft); }
+
+  /* ---- Notes / flags ---- */
+  .note{ margin:18px 0 6px; border:1px solid var(--rule); background:var(--blue-tint); border-left:3px solid var(--asbuilt); padding:15px 19px; }
+  .note .flag{ font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--asbuilt); display:block; margin-bottom:6px; }
+  .note p{ margin:0; font-size:15px; line-height:1.55; }
+  .ground{ margin:16px 0; border:1px dashed var(--rule-strong); background:var(--stamp-tint); padding:13px 17px; }
+  .ground .flag{ font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--stamp); display:block; margin-bottom:5px; }
+  .ground p{ margin:0; font-size:14px; line-height:1.55; color:var(--ink); }
+
+  ul.req{ list-style:none; margin:8px 0 4px; padding:0; }
+  ul.req li{
+    position:relative; padding:5px 0 5px 26px; font-size:15px; line-height:1.5;
+    max-width:76ch; border-bottom:1px dotted var(--rule);
+  }
+  ul.req li:last-child{ border-bottom:none; }
+  ul.req li::before{ content:"▸"; position:absolute; left:4px; top:5px; color:var(--asbuilt); font-size:12px; }
+  ul.req li .rid{ font-family:var(--mono); font-size:11.5px; color:var(--stamp); margin-right:6px; font-weight:600; }
+
+  /* ---- Phases ---- */
+  .phases{ counter-reset:ph; border-top:1px solid var(--rule); margin-top:14px; }
+  .phase{ display:grid; grid-template-columns:auto 1fr; gap:20px; padding:18px 0; border-bottom:1px solid var(--rule); }
+  .phase .pn{
+    font-family:var(--mono); font-weight:700; font-size:12px; color:#fff;
+    background:var(--asbuilt); border-radius:3px; padding:3px 9px; height:fit-content; white-space:nowrap;
+  }
+  .phase.hl .pn{ background:var(--stamp); }
+  .phase h4{ font-family:var(--sans); font-weight:800; font-size:16.5px; margin:0 0 5px; }
+  .phase p{ margin:0; font-size:14.5px; color:var(--ink-soft); line-height:1.5; }
+  .phase .deliv{ font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-faint); margin-top:8px; display:block; }
+
+  /* ---- Register table ---- */
+  .register-wrap{ overflow-x:auto; border:1px solid var(--rule); margin-top:8px; }
+  table.register{ border-collapse:collapse; width:100%; min-width:720px; font-size:13px; }
+  table.register thead th{
+    background:var(--ink); color:#fff; font-family:var(--mono); font-size:9.5px;
+    letter-spacing:.1em; text-transform:uppercase; text-align:left; padding:8px 11px; font-weight:600;
+  }
+  table.register td{ border-bottom:1px solid var(--rule); border-right:1px solid var(--rule); padding:8px 11px; vertical-align:top; line-height:1.4; }
+  table.register td:last-child{ border-right:none; }
+  table.register tr:nth-child(even) td{ background:#fafbfb; }
+  table.register .rid{ font-family:var(--mono); font-weight:600; white-space:nowrap; font-size:12px; color:var(--ink); }
+  .moscow{ display:inline-block; font-family:var(--mono); font-size:9.5px; padding:1px 6px; border-radius:9px; letter-spacing:.04em; text-transform:uppercase; border:1px solid var(--rule-strong); }
+  .moscow.must{ color:var(--stamp); border-color:#e3c4bf; background:var(--stamp-tint); }
+  .moscow.should{ color:var(--asbuilt); border-color:#bcd2e0; background:var(--blue-tint); }
+  .moscow.could{ color:#2f6b3a; border-color:#bcd6c1; background:var(--green-tint); }
+  .ph-cell{ font-family:var(--mono); font-size:11px; color:var(--ink-soft); white-space:nowrap; }
+
+  .sources ul{ list-style:none; margin:0; padding:0; }
+  .sources li{ border-bottom:1px solid var(--rule); padding:9px 0; font-size:13.5px; line-height:1.45; display:grid; grid-template-columns:auto 1fr; gap:14px; }
+  .sources li .tag{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); letter-spacing:.06em; white-space:nowrap; padding-top:2px; }
+  .disclaimer{ margin-top:24px; font-size:12.5px; color:var(--ink-faint); font-style:italic; line-height:1.5; max-width:80ch; }
+
+  footer{
+    border-top:2px solid var(--ink); padding:18px 0 60px; font-family:var(--mono);
+    font-size:11px; color:var(--ink-faint); letter-spacing:.04em;
+    display:flex; flex-wrap:wrap; gap:6px 28px; justify-content:space-between;
+  }
+  hr.thin{ border:none; border-top:1px solid var(--rule); margin:30px 0; }
+
+  @media print{
+    body{ font-size:11pt; }
+    .toc,.asbuilt-stamp{ display:none; }
+    .layout{ grid-template-columns:1fr; gap:0; margin-top:20px; }
+    .content > section{ break-inside:avoid; margin-bottom:24px; }
+    .note,.ground,.scope,.pl-step,.phase,table.register{ break-inside:avoid; }
+    a{ color:var(--ink) !important; border:none !important; }
+    .register-wrap{ overflow:visible; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===================== TITLE BLOCK ===================== -->
+  <header class="titleblock stamp-row">
+    <div class="asbuilt-stamp">For Review</div>
+    <p class="tb-eyebrow">P&amp;ID Authoring Tool · Doc 2 of set</p>
+    <h1 class="tb-title">Functional Requirements</h1>
+    <p class="tb-sub">How P&amp;IDs are produced in practice, and what the software must do to support them — built up in phases from basic block diagrams to reusable, connection-aware typicals.</p>
+    <div class="tb-meta">
+      <div class="tb-cell"><span class="k">Document</span><span class="v">PID-FRS</span></div>
+      <div class="tb-cell"><span class="k">Revision</span><span class="v stamp">0</span></div>
+      <div class="tb-cell"><span class="k">Date</span><span class="v">2026-06-29</span></div>
+      <div class="tb-cell"><span class="k">Companion to</span><span class="v">PID-STD-REF</span></div>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- ===================== TOC ===================== -->
+    <nav class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#workflow"><span class="num">00</span>How P&amp;IDs are produced</a></li>
+        <li><a href="#principles"><span class="num">01</span>Guiding principles</a></li>
+        <li><a href="#areas"><span class="num">02</span>Functional areas (A–K)</a></li>
+        <li><a href="#typicals"><span class="num">03</span>Typicals — the headline capability</a></li>
+        <li><a href="#phasing"><span class="num">04</span>Phased roadmap</a></li>
+        <li><a href="#register"><span class="num">05</span>Requirements register</a></li>
+        <li><a href="#schema"><span class="num">06</span>Implications for the schema</a></li>
+        <li><a href="#sources"><span class="num">07</span>Sources &amp; notes</a></li>
+      </ol>
+    </nav>
+
+    <!-- ===================== CONTENT ===================== -->
+    <main class="content">
+
+      <!-- ---------- 00 WORKFLOW ---------- -->
+      <section id="workflow">
+        <p class="eyebrow"><span class="ec">00</span> The practice we are supporting</p>
+        <h2 class="sec">How P&amp;IDs are produced</h2>
+
+        <p>A P&amp;ID is not drawn in one pass. It is the end of a chain that starts coarse and adds detail in deliberate layers — which is exactly the “very basic block levels first, then progressively more” approach you described. Understanding that chain tells us what the tool must let a user do at each stage.</p>
+
+        <div class="pipeline">
+          <div class="pl-step">
+            <span class="plc">STAGE 1</span>
+            <h5>Block Flow</h5>
+            <p>Blocks for unit operations, arrows for flow. The process concept, no equipment detail. Conceptual / pre-FEED.</p>
+          </div>
+          <div class="pl-step">
+            <span class="plc">STAGE 2</span>
+            <h5>Process Flow</h5>
+            <p>Major equipment, main streams, key conditions and a material balance. Answers “what equipment, what duty”.</p>
+          </div>
+          <div class="pl-step">
+            <span class="plc">STAGE 3</span>
+            <h5>P&amp;ID</h5>
+            <p>Every line with number, size and class; all valves, instruments, control loops, safety devices. The build-and-operate document.</p>
+          </div>
+          <div class="pl-step">
+            <span class="plc">STAGE 4</span>
+            <h5>Lifecycle</h5>
+            <p>HAZOP, construction, commissioning, operation, MOC and as-built revision — the P&amp;ID is the living reference throughout.</p>
+          </div>
+        </div>
+
+        <h3 class="sub">What a finished P&amp;ID carries</h3>
+        <p>Equipment shown as schematic symbols sized to host their nozzles; piping with line numbers encoding service and conditions, plus size and pipe class; valves and special piping items; instruments and control loops in ISA bubbles; off-page connectors where lines leave the sheet; and a frame of context — title block, revision table, reference drawings, a legend/symbol sheet, and engineering notes. Importantly, a P&amp;ID is schematic: valves are drawn at a single nominal size, and a valve’s size is annotated only when it differs from the line it sits in.</p>
+
+        <h3 class="sub">The decisive distinction: drafting vs. data</h3>
+        <p>The single most important lesson from the established tools is the split between <em class="term">drawing-centric</em> CAD (lines and text that merely look right) and <em class="term">data-centric</em> intelligent P&amp;ID (every placed item is an object linked to an engineering record). In the data-centric model, properties entered against an object drive its on-drawing labels and feed reports directly, connectivity between items is real and queryable, and the same database backs automatic validation. This is the model worth building toward — and it is the same “data is the source of truth, the graphic is a projection of it” principle established in the standards reference.</p>
+
+        <div class="note">
+          <span class="flag">▸ Why this matters for us</span>
+          <p>If labels are free text and lines are just geometry, the tool can never generate a line list or catch a duplicate tag. Every requirement below assumes the object-with-record model. The graphic is rendered <strong>from</strong> the data, never the reverse.</p>
+        </div>
+      </section>
+
+      <!-- ---------- 01 PRINCIPLES ---------- -->
+      <section id="principles">
+        <p class="eyebrow"><span class="ec">01</span> Derived from the practice</p>
+        <h2 class="sec">Guiding principles</h2>
+        <ul class="req">
+          <li><span class="rid">P1</span><strong>Data is the source of truth.</strong> Each component is a record; the drawing is a projection. Labels and reports read from the record.</li>
+          <li><span class="rid">P2</span><strong>Progressive elaboration.</strong> The same model supports a coarse block diagram and a fully detailed P&amp;ID. Detail is added, not redrawn.</li>
+          <li><span class="rid">P3</span><strong>Reuse over redraw.</strong> Repeated arrangements are captured once as typicals and instantiated, not copied by hand.</li>
+          <li><span class="rid">P4</span><strong>Connectivity is real.</strong> A connection between two ports is a modelled relationship, not two lines that happen to touch.</li>
+          <li><span class="rid">P5</span><strong>Validate continuously.</strong> Integrity checks run as the user works and on demand, surfacing issues early.</li>
+          <li><span class="rid">P6</span><strong>Standards are pluggable.</strong> Symbol set and tagging scheme (ISA / KKS / RDS-PP) are configuration, not hard-coding.</li>
+          <li><span class="rid">P7</span><strong>Portable and self-contained.</strong> One HTML file, no install, no network dependency, works offline from the filesystem.</li>
+        </ul>
+      </section>
+
+      <!-- ---------- 02 FUNCTIONAL AREAS ---------- -->
+      <section id="areas">
+        <p class="eyebrow"><span class="ec">02</span> What the software must do</p>
+        <h2 class="sec">Functional areas</h2>
+        <p>Eleven capability areas, A–K. Each lists its core requirements; the consolidated, prioritised list with phase mapping is in the <a href="#register">requirements register</a>.</p>
+
+        <h4 class="area"><span class="acode">A</span> Drawing surface &amp; sheet</h4>
+        <ul class="req">
+          <li><span class="rid">A1</span>A pannable, zoomable canvas with an optional snap grid.</li>
+          <li><span class="rid">A2</span>A sheet frame with title block, border zones, revision table and a notes area.</li>
+          <li><span class="rid">A3</span>Place, move, rotate, mirror and delete components; multi-select and align.</li>
+        </ul>
+
+        <h4 class="area"><span class="acode">B</span> Component model &amp; symbol library</h4>
+        <ul class="req">
+          <li><span class="rid">B1</span>Each symbol is a registered component <em>type</em>: an SVG render function plus a declared field schema.</li>
+          <li><span class="rid">B2</span>Placing a symbol creates an instance carrying a stable ID and its own data record.</li>
+          <li><span class="rid">B3</span>A seed library covering the core classes: equipment, valves, piping items, instruments, lines.</li>
+          <li><span class="rid">B4</span>New types added by registering a module — no change to the core engine.</li>
+        </ul>
+
+        <h4 class="area"><span class="acode">C</span> Connectivity &amp; topology</h4>
+        <ul class="req">
+          <li><span class="rid">C1</span>Components expose <em class="term">ports</em> (equipment nozzles, valve ends, instrument taps) as named connection points.</li>
+          <li><span class="rid">C2</span>Lines connect port-to-port as modelled relationships; endpoints snap to ports.</li>
+          <li><span class="rid">C3</span>Flow direction is held on the connection and shown by arrowheads.</li>
+          <li><span class="rid">C4</span>Moving a component keeps its connections attached and re-routes lines.</li>
+        </ul>
+
+        <h4 class="area"><span class="acode">D</span> Identification &amp; tagging</h4>
+        <ul class="req">
+          <li><span class="rid">D1</span>A pluggable tagging scheme — ISA loop tags, KKS, or RDS-PP — selected per project.</li>
+          <li><span class="rid">D2</span>Auto-numbering with per-scheme validation and parsing of structure.</li>
+          <li><span class="rid">D3</span>Project-wide tag uniqueness enforced; duplicates flagged.</li>
+          <li><span class="rid">D4</span>On-drawing tag labels are driven by the record, never edited as free text.</li>
+        </ul>
+
+        <h4 class="area"><span class="acode">E</span> Line designation &amp; process data</h4>
+        <ul class="req">
+          <li><span class="rid">E1</span>Lines carry a line number, nominal size, service and pipe class/spec.</li>
+          <li><span class="rid">E2</span>Valves carry type, end connection and fail-action; size shown only when it differs from the line.</li>
+          <li><span class="rid">E3</span>Instruments carry measured variable and function per ISA-5.1, grouped into control loops.</li>
+        </ul>
+
+        <h4 class="area"><span class="acode">F</span> Reusable typicals / assemblies</h4>
+        <p style="margin-top:4px;">The headline capability — detailed in <a href="#typicals">section 03</a>. In brief: capture a sub-arrangement once, instantiate it many times, and let it adapt to what it connects to.</p>
+
+        <h4 class="area"><span class="acode">G</span> Validation &amp; integrity</h4>
+        <ul class="req">
+          <li><span class="rid">G1</span>Rules-driven checks: duplicate tags, missing mandatory data, dangling (unconnected) ports.</li>
+          <li><span class="rid">G2</span>Connection-logic checks: incompatible port types, illegal connections, spec breaks at boundaries.</li>
+          <li><span class="rid">G3</span>Checks run both live (as drawn) and as an on-demand audit producing a findings list.</li>
+        </ul>
+
+        <h4 class="area"><span class="acode">H</span> Off-page &amp; multi-sheet</h4>
+        <ul class="req">
+          <li><span class="rid">H1</span>Off-page connectors terminate a line leaving the sheet and reference its continuation.</li>
+          <li><span class="rid">H2</span>Matched connectors across sheets resolve to the same logical line.</li>
+          <li><span class="rid">H3</span>A drawing register tracks sheets, numbers and revisions across the set.</li>
+        </ul>
+
+        <h4 class="area"><span class="acode">I</span> Reports &amp; deliverables</h4>
+        <ul class="req">
+          <li><span class="rid">I1</span>Generate a line list, valve list, equipment list and instrument index from the model.</li>
+          <li><span class="rid">I2</span>Reports reflect live data — no separate re-keying — and export to CSV.</li>
+        </ul>
+
+        <h4 class="area"><span class="acode">J</span> Persistence, revision &amp; exchange</h4>
+        <ul class="req">
+          <li><span class="rid">J1</span>Save and load the whole model as JSON; round-trip is lossless.</li>
+          <li><span class="rid">J2</span>Revision history with a per-revision description (MOC-style audit trail).</li>
+          <li><span class="rid">J3</span>Export shaped for DEXPI / ISO 15926 mapping; import where feasible.</li>
+        </ul>
+
+        <h4 class="area"><span class="acode">K</span> Non-functional</h4>
+        <ul class="req">
+          <li><span class="rid">K1</span>Single self-contained HTML file; no external fonts, scripts or network calls.</li>
+          <li><span class="rid">K2</span>Runs offline from the filesystem on a managed laptop; prints cleanly.</li>
+          <li><span class="rid">K3</span>Remains responsive at the scale of a realistic single sheet (hundreds of objects).</li>
+        </ul>
+      </section>
+
+      <!-- ---------- 03 TYPICALS ---------- -->
+      <section id="typicals">
+        <p class="eyebrow"><span class="ec">03</span> Reuse that adapts</p>
+        <h2 class="sec">Typicals — the headline capability</h2>
+
+        <p>This is the concept you flagged: snippets of an area that get reused and adjusted for what they connect to. It has a long pedigree in P&amp;ID practice and a clear shape in the intelligent tools, so it is worth specifying carefully rather than discovering later.</p>
+
+        <div class="ground">
+          <span class="flag">◢ Grounded in practice</span>
+          <p>Where a valve or piping arrangement recurs — a control-valve station with isolation and bypass, a pump with its suction/discharge valves, a steam-trap set — practice is to draw it once as a <strong>typical detail</strong> on the symbols sheet and reference it, rather than redraw it each time. The tool should make that a first-class, live object.</p>
+        </div>
+
+        <h3 class="sub">What a typical is, in the model</h3>
+        <p>A typical is a saved <em class="term">sub-graph</em> of the same component model: a small set of components and the connections between them, with a defined boundary. It is not a picture — it is a parameterised fragment of the data model that renders like everything else.</p>
+
+        <ul class="req">
+          <li><span class="rid">F1</span><strong>Capture.</strong> Select an arrangement and save it as a named typical, recording its components, internal connections and exposed boundary ports.</li>
+          <li><span class="rid">F2</span><strong>Instantiate.</strong> Drop a typical onto the canvas as one act; it expands into its constituent objects, each with fresh stable IDs.</li>
+          <li><span class="rid">F3</span><strong>Parameters.</strong> A typical declares parameters (e.g. line size, service, valve type, tag seed) set at insertion, so one definition serves many cases.</li>
+          <li><span class="rid">F4</span><strong>Boundary ports.</strong> A typical exposes named inlet/outlet ports; these are how it connects to the rest of the drawing.</li>
+          <li><span class="rid">F5</span><strong>Context adaptation.</strong> On connection, boundary attributes adapt to what they join — a typical inserted into a <code>6"-CWS</code> line inherits that size, service and spec unless explicitly overridden.</li>
+          <li><span class="rid">F6</span><strong>Connection rules.</strong> Ports declare compatibility; the tool prevents or flags joins that violate them (e.g. instrument signal to process line).</li>
+          <li><span class="rid">F7</span><strong>Independence after insertion.</strong> An instance is editable on its own; later edits to the definition do not silently rewrite placed instances (no surprise mutation).</li>
+        </ul>
+
+        <div class="note">
+          <span class="flag">▸ Design consequence</span>
+          <p>F5 and F6 are what make a typical “adjust for what it connects to”. They require two things already in the model: <strong>ports with declared attributes/compatibility</strong> (area C) and <strong>an attribute-inheritance rule at the boundary</strong>. Get ports right early and adaptive typicals become a natural extension rather than a rebuild.</p>
+        </div>
+      </section>
+
+      <!-- ---------- 04 PHASING ---------- -->
+      <section id="phasing">
+        <p class="eyebrow"><span class="ec">04</span> Build order</p>
+        <h2 class="sec">Phased roadmap</h2>
+        <p>Each phase is usable on its own and sets up the next. The progression mirrors how P&amp;IDs themselves evolve — coarse blocks first, detail and intelligence layered on. The highlighted phase is where “reuse that adapts” arrives.</p>
+
+        <div class="phases">
+          <div class="phase">
+            <span class="pn">P0</span>
+            <div>
+              <h4>Block level</h4>
+              <p>Place labelled blocks, connect them with simple directional lines, save/load as JSON. Establishes the source-of-truth model and the canvas.</p>
+              <span class="deliv">Delivers · model + canvas + persistence (P1, A1–A3, B1–B2, C2–C3, J1)</span>
+            </div>
+          </div>
+          <div class="phase">
+            <span class="pn">P1</span>
+            <div>
+              <h4>Object &amp; symbol detail</h4>
+              <p>Real symbol library, component records with properties, a tagging scheme with uniqueness, property-driven labels.</p>
+              <span class="deliv">Delivers · symbol registry + tagging (B3–B4, D1–D4, E1–E3)</span>
+            </div>
+          </div>
+          <div class="phase">
+            <span class="pn">P2</span>
+            <div>
+              <h4>Ports, connectivity &amp; validation</h4>
+              <p>Ports/nozzles as named connection points, real port-to-port connections that survive moves, and the first integrity checks.</p>
+              <span class="deliv">Delivers · topology + checks (C1, C4, G1–G3)</span>
+            </div>
+          </div>
+          <div class="phase hl">
+            <span class="pn">P3</span>
+            <div>
+              <h4>Reusable, connection-aware typicals</h4>
+              <p>Capture and instantiate typicals; parameters at insertion; boundary ports; attribute inheritance and connection rules so a typical adapts to what it joins. <strong>This is the snippet capability.</strong></p>
+              <span class="deliv">Delivers · typicals (F1–F7)</span>
+            </div>
+          </div>
+          <div class="phase">
+            <span class="pn">P4</span>
+            <div>
+              <h4>Multi-sheet, reports &amp; exchange</h4>
+              <p>Off-page connectors and a drawing register; generated line/valve/equipment/instrument lists; revision history; DEXPI-shaped export.</p>
+              <span class="deliv">Delivers · scale-out (H1–H3, I1–I2, J2–J3)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 05 REGISTER ---------- -->
+      <section id="register">
+        <p class="eyebrow"><span class="ec">05</span> Traceability</p>
+        <h2 class="sec">Requirements register</h2>
+        <p>Consolidated and prioritised: <span class="moscow must">must</span> core, <span class="moscow should">should</span> important, <span class="moscow could">could</span> later. Phase column ties each to the roadmap.</p>
+
+        <div class="register-wrap">
+          <table class="register">
+            <thead>
+              <tr><th style="width:62px;">ID</th><th>Requirement</th><th style="width:62px;">Phase</th><th style="width:74px;">Priority</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="rid">A1</td><td>Pan/zoom canvas with optional snap grid</td><td class="ph-cell">P0</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">A2</td><td>Sheet frame: title block, border, revision table, notes</td><td class="ph-cell">P0</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">A3</td><td>Place / move / rotate / mirror / delete; multi-select</td><td class="ph-cell">P0</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">B1</td><td>Symbols as registered types (render fn + field schema)</td><td class="ph-cell">P0</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">B2</td><td>Placement creates instance with stable ID + record</td><td class="ph-cell">P0</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">B3</td><td>Seed library: equipment, valves, piping items, instruments, lines</td><td class="ph-cell">P1</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">B4</td><td>New types added by registering a module only</td><td class="ph-cell">P1</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">C1</td><td>Components expose named ports (nozzles, ends, taps)</td><td class="ph-cell">P2</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">C2</td><td>Lines connect port-to-port as relationships; snap to ports</td><td class="ph-cell">P0</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">C3</td><td>Flow direction held on the connection; arrowheads</td><td class="ph-cell">P0</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">C4</td><td>Connections survive component moves; lines re-route</td><td class="ph-cell">P2</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">D1</td><td>Pluggable tagging scheme: ISA / KKS / RDS-PP</td><td class="ph-cell">P1</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">D2</td><td>Auto-numbering with per-scheme validation</td><td class="ph-cell">P1</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">D3</td><td>Project-wide tag uniqueness enforced</td><td class="ph-cell">P1</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">D4</td><td>Labels driven by record, not free text</td><td class="ph-cell">P1</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">E1</td><td>Lines carry number, size, service, pipe class/spec</td><td class="ph-cell">P1</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">E2</td><td>Valve type/ends/fail-action; size shown only if ≠ line</td><td class="ph-cell">P1</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">E3</td><td>Instruments per ISA-5.1; grouped into loops</td><td class="ph-cell">P1</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">F1</td><td>Capture an arrangement as a named typical</td><td class="ph-cell">P3</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">F2</td><td>Instantiate a typical as one act; fresh IDs</td><td class="ph-cell">P3</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">F3</td><td>Typical parameters set at insertion</td><td class="ph-cell">P3</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">F4</td><td>Typical exposes named boundary ports</td><td class="ph-cell">P3</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">F5</td><td>Boundary attributes adapt to what they connect to</td><td class="ph-cell">P3</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">F6</td><td>Port compatibility / connection rules enforced</td><td class="ph-cell">P3</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">F7</td><td>Instances independent of later definition edits</td><td class="ph-cell">P3</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">G1</td><td>Checks: duplicate tags, missing data, dangling ports</td><td class="ph-cell">P2</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">G2</td><td>Connection-logic checks; spec breaks at boundaries</td><td class="ph-cell">P2</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">G3</td><td>Live + on-demand audit producing a findings list</td><td class="ph-cell">P2</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">H1</td><td>Off-page connectors with continuation reference</td><td class="ph-cell">P4</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">H2</td><td>Matched connectors resolve to one logical line</td><td class="ph-cell">P4</td><td><span class="moscow could">could</span></td></tr>
+              <tr><td class="rid">H3</td><td>Drawing register: sheets, numbers, revisions</td><td class="ph-cell">P4</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">I1</td><td>Generate line / valve / equipment / instrument lists</td><td class="ph-cell">P4</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">I2</td><td>Reports reflect live data; export CSV</td><td class="ph-cell">P4</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">J1</td><td>Lossless JSON save / load of whole model</td><td class="ph-cell">P0</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">J2</td><td>Revision history with per-revision description</td><td class="ph-cell">P4</td><td><span class="moscow should">should</span></td></tr>
+              <tr><td class="rid">J3</td><td>DEXPI / ISO 15926-shaped export; import where feasible</td><td class="ph-cell">P4</td><td><span class="moscow could">could</span></td></tr>
+              <tr><td class="rid">K1</td><td>Single self-contained HTML file, zero external deps</td><td class="ph-cell">P0</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">K2</td><td>Offline from filesystem; prints cleanly</td><td class="ph-cell">P0</td><td><span class="moscow must">must</span></td></tr>
+              <tr><td class="rid">K3</td><td>Responsive at single-sheet scale (hundreds of objects)</td><td class="ph-cell">P2</td><td><span class="moscow should">should</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ---------- 06 SCHEMA IMPLICATIONS ---------- -->
+      <section id="schema">
+        <p class="eyebrow"><span class="ec">06</span> Feeding the next document</p>
+        <h2 class="sec">Implications for the schema</h2>
+        <p>These requirements pin down what the component record must hold before any code is written — which is precisely what the schema spec (the agreed cycle-1 deliverable) defines:</p>
+        <ul class="req">
+          <li><span class="rid">S1</span><strong>Identity:</strong> a stable ID on every instance (B2, F2), plus a tag held separately from identity (D1–D4).</li>
+          <li><span class="rid">S2</span><strong>Class:</strong> a component type/class reference (B1) that can later map to a DEXPI / ISO 15926 class (J3).</li>
+          <li><span class="rid">S3</span><strong>Two attribute namespaces:</strong> geometry/visual (position, rotation) kept apart from domain data (tag, size, service, spec, ratings).</li>
+          <li><span class="rid">S4</span><strong>Ports:</strong> a named-port collection per component, each port carrying attributes and compatibility (C1, F4–F6).</li>
+          <li><span class="rid">S5</span><strong>Connections:</strong> first-class relationship records referencing two ports, carrying flow direction and line data (C2–C3, E1).</li>
+          <li><span class="rid">S6</span><strong>Typical definitions:</strong> a sub-graph record (components + internal connections + boundary ports + parameters) distinct from its instances (F1–F3).</li>
+          <li><span class="rid">S7</span><strong>Document frame:</strong> sheet, title-block, revision and notes records around the component model (A2, H3, J2).</li>
+        </ul>
+        <div class="note">
+          <span class="flag">▸ Hand-off</span>
+          <p>S1–S7 are the headings the schema spec should fill in. The functional work has done its job: it has told us exactly what the record must carry, so the schema is now a description task, not a guessing one.</p>
+        </div>
+      </section>
+
+      <!-- ---------- 07 SOURCES ---------- -->
+      <section id="sources" class="sources">
+        <p class="eyebrow"><span class="ec">07</span> Provenance</p>
+        <h2 class="sec">Sources &amp; notes</h2>
+        <p>Synthesised from current public sources on P&amp;ID production practice and intelligent P&amp;ID tooling (June 2026). Practice descriptions are paraphrased; no proprietary or copyrighted text is reproduced.</p>
+        <ul>
+          <li><span class="tag">Workflow</span><span>BFD → PFD → P&amp;ID progression and lifecycle use (HAZOP, construction, operation, MOC) — process-engineering references and EPC practice guides.</span></li>
+          <li><span class="tag">Practice</span><span>Typical details for repeated arrangements, off-page header connectors, legend/notes conventions, nozzles as connection points — project engineering standards and P&amp;ID guides.</span></li>
+          <li><span class="tag">Tools</span><span>Data-centric object model, smart tagging, property-driven labels, intelligent connectivity, rules-driven validation, reusable assemblies, generated reports, ISO 15926 / DEXPI exchange — vendor and practitioner material on AVEVA P&amp;ID, Hexagon/Octave Facets (SmartPlant) P&amp;ID, Bentley OpenPlant, Siemens COMOS, AutoCAD P&amp;ID.</span></li>
+          <li><span class="tag">Standards</span><span>ISA-5.1 instrument identification, KKS / RDS-PP / ISO-IEC 81346 tagging, DEXPI / ISO 15926 exchange — see companion document PID-STD-REF.</span></li>
+        </ul>
+        <p class="disclaimer">This is a requirements baseline, not a final specification. Priorities and phasing are a starting position for review and will shift as the schema and early phases are built. Where a project mandates a house standard or deliverable format, that requirement governs.</p>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    <span>P&amp;ID AUTHORING TOOL · FUNCTIONAL REQUIREMENTS · REV 0</span>
+    <span>FOR REVIEW</span>
+    <span>2026-06-29</span>
+  </footer>
+
+</div>
+</body>
+</html>

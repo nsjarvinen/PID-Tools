@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P&amp;ID Authoring Tool — Data Schema Specification</title>
+<style>
+  :root{
+    --ink:#1c1b19; --ink-soft:#5a5954; --ink-faint:#8b8a84;
+    --paper:#ffffff; --panel:#f5f6f7; --panel-2:#eef0f1;
+    --rule:#d7d8d6; --rule-strong:#b4b5b2;
+    --stamp:#b23a2e; --asbuilt:#1f5f8b;
+    --stamp-tint:#f7ecea; --blue-tint:#eaf1f6; --green-tint:#eef6ef;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,Cambria,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --maxw:1180px;
+  }
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:var(--serif); font-size:17px; line-height:1.62; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 28px; }
+
+  .titleblock{ border-bottom:2px solid var(--ink); margin-top:34px; }
+  .tb-eyebrow{ font-family:var(--mono); font-size:11.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--stamp); margin:0 0 14px; }
+  .tb-title{ font-family:var(--sans); font-weight:800; letter-spacing:-0.015em; line-height:1.04; font-size:clamp(28px,5vw,50px); margin:0 0 4px; text-transform:uppercase; }
+  .tb-sub{ font-family:var(--serif); font-style:italic; color:var(--ink-soft); font-size:clamp(16px,2.1vw,20px); margin:0 0 22px; max-width:64ch; }
+  .tb-meta{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-top:1px solid var(--rule); border-left:1px solid var(--rule); font-family:var(--mono); font-size:11px; margin-bottom:-1px; }
+  .tb-cell{ border-right:1px solid var(--rule); border-bottom:1px solid var(--rule); padding:9px 12px; }
+  .tb-cell .k{ display:block; color:var(--ink-faint); letter-spacing:.12em; text-transform:uppercase; font-size:9.5px; margin-bottom:3px; }
+  .tb-cell .v{ color:var(--ink); font-size:12px; }
+  .tb-cell .v.stamp{ color:var(--stamp); font-weight:700; }
+  .stamp-row{ position:relative; }
+  .asbuilt-stamp{ position:absolute; right:0; top:18px; transform:rotate(-7deg); border:2px solid var(--asbuilt); color:var(--asbuilt); font-family:var(--sans); font-weight:800; letter-spacing:.06em; font-size:13px; padding:5px 12px 4px; opacity:.85; text-transform:uppercase; pointer-events:none; }
+  @media (max-width:720px){ .asbuilt-stamp{ display:none; } }
+
+  .layout{ display:grid; grid-template-columns:1fr; gap:46px; margin:42px 0 80px; }
+  @media (min-width:1000px){ .layout{ grid-template-columns:230px 1fr; gap:54px; } }
+  .toc{ align-self:start; }
+  @media (min-width:1000px){ .toc{ position:sticky; top:24px; } }
+  .toc h2{ font-family:var(--mono); font-size:10.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-faint); border-bottom:1px solid var(--rule); padding-bottom:8px; margin:0 0 12px; }
+  .toc ol{ list-style:none; margin:0; padding:0; }
+  .toc li{ margin:0 0 2px; }
+  .toc a{ display:block; font-family:var(--sans); font-size:13px; line-height:1.32; color:var(--ink-soft); text-decoration:none; padding:4px 8px 4px 0; }
+  .toc a:hover{ color:var(--stamp); }
+  .toc .num{ font-family:var(--mono); font-size:10.5px; color:var(--asbuilt); margin-right:8px; }
+
+  .content > section{ margin-bottom:52px; scroll-margin-top:18px; }
+  .eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--asbuilt); margin:0 0 10px; display:flex; align-items:baseline; gap:12px; }
+  .eyebrow .ec{ color:var(--stamp); }
+  h2.sec{ font-family:var(--sans); font-weight:800; letter-spacing:-0.01em; font-size:clamp(22px,3.3vw,31px); line-height:1.1; margin:0 0 16px; }
+  h3.sub{ font-family:var(--sans); font-weight:700; font-size:18px; margin:30px 0 8px; }
+  p{ margin:0 0 15px; max-width:74ch; }
+  .lead{ font-size:19px; }
+  .content a{ color:var(--asbuilt); text-decoration:none; border-bottom:1px solid var(--rule-strong); }
+  code,.code{ font-family:var(--mono); font-size:.86em; background:var(--panel-2); border:1px solid var(--rule); border-radius:3px; padding:1px 5px; color:var(--ink); white-space:nowrap; }
+  em.term{ font-style:italic; color:var(--ink); font-weight:600; }
+
+  .scope{ background:var(--panel); border:1px solid var(--rule); border-left:3px solid var(--ink); padding:22px 26px; margin:0 0 8px; }
+  .scope p:last-child{ margin-bottom:0; }
+
+  pre.cb{
+    font-family:var(--mono); font-size:12.5px; line-height:1.55;
+    background:#fbfbfa; color:var(--ink); border:1px solid var(--rule);
+    border-left:3px solid var(--asbuilt); border-radius:4px;
+    padding:15px 18px; overflow-x:auto; margin:14px 0; max-width:100%;
+  }
+  pre.cb .c{ color:#9a8f6b; }      /* comment */
+  pre.cb .k{ color:var(--stamp); } /* key */
+  pre.cb .s{ color:#2f6b3a; }      /* string */
+
+  /* field tables */
+  .ft-wrap{ overflow-x:auto; border:1px solid var(--rule); margin:12px 0; }
+  table.ft{ border-collapse:collapse; width:100%; min-width:640px; font-size:13.5px; }
+  table.ft thead th{ background:var(--ink); color:#fff; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; text-align:left; padding:8px 11px; font-weight:600; }
+  table.ft td{ border-bottom:1px solid var(--rule); border-right:1px solid var(--rule); padding:8px 11px; vertical-align:top; line-height:1.42; }
+  table.ft td:last-child{ border-right:none; }
+  table.ft tr:nth-child(even) td{ background:#fafbfb; }
+  table.ft .fn{ font-family:var(--mono); font-weight:600; font-size:12.5px; white-space:nowrap; color:var(--ink); }
+  table.ft .ty{ font-family:var(--mono); font-size:11.5px; color:var(--asbuilt); white-space:nowrap; }
+  .req-y{ font-family:var(--mono); font-size:10px; color:var(--stamp); font-weight:700; }
+  .req-n{ font-family:var(--mono); font-size:10px; color:var(--ink-faint); }
+  .sref{ font-family:var(--mono); font-size:10px; color:#fff; background:var(--asbuilt); padding:1px 6px; border-radius:8px; letter-spacing:.03em; white-space:nowrap; }
+
+  .note{ margin:18px 0 6px; border:1px solid var(--rule); background:var(--blue-tint); border-left:3px solid var(--asbuilt); padding:15px 19px; }
+  .note .flag{ font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--asbuilt); display:block; margin-bottom:6px; }
+  .note p{ margin:0; font-size:15px; line-height:1.55; }
+  .decision{ margin:16px 0; border:1px dashed var(--rule-strong); background:var(--stamp-tint); padding:14px 18px; }
+  .decision .flag{ font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--stamp); display:block; margin-bottom:5px; }
+  .decision p{ margin:0 0 8px; font-size:14.5px; line-height:1.55; color:var(--ink); }
+  .decision p:last-child{ margin-bottom:0; }
+
+  .tree{ font-family:var(--mono); font-size:13px; line-height:1.7; background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:16px 20px; margin:14px 0; overflow-x:auto; }
+  .tree .cm{ color:var(--ink-faint); }
+
+  .sources ul{ list-style:none; margin:0; padding:0; }
+  .sources li{ border-bottom:1px solid var(--rule); padding:9px 0; font-size:13.5px; line-height:1.45; display:grid; grid-template-columns:auto 1fr; gap:14px; }
+  .sources li .tag{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); letter-spacing:.06em; white-space:nowrap; padding-top:2px; }
+  .disclaimer{ margin-top:24px; font-size:12.5px; color:var(--ink-faint); font-style:italic; line-height:1.5; max-width:80ch; }
+
+  footer{ border-top:2px solid var(--ink); padding:18px 0 60px; font-family:var(--mono); font-size:11px; color:var(--ink-faint); letter-spacing:.04em; display:flex; flex-wrap:wrap; gap:6px 28px; justify-content:space-between; }
+  hr.thin{ border:none; border-top:1px solid var(--rule); margin:30px 0; }
+
+  @media print{
+    body{ font-size:11pt; }
+    .toc,.asbuilt-stamp{ display:none; }
+    .layout{ grid-template-columns:1fr; gap:0; margin-top:20px; }
+    .content > section{ break-inside:avoid; margin-bottom:24px; }
+    .note,.decision,.scope,table.ft,pre.cb,.tree{ break-inside:avoid; }
+    a{ color:var(--ink) !important; border:none !important; }
+    .ft-wrap{ overflow:visible; }
+    pre.cb{ white-space:pre-wrap; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="titleblock stamp-row">
+    <div class="asbuilt-stamp">For Review</div>
+    <p class="tb-eyebrow">P&amp;ID Authoring Tool · Doc 3 of set · Cycle 1</p>
+    <h1 class="tb-title">Data Schema Specification</h1>
+    <p class="tb-sub">The shape of the component record — the single source of truth the graphic projects from. Written against S1–S7 of the functional requirements. No implementation code; this is the contract everything is built on.</p>
+    <div class="tb-meta">
+      <div class="tb-cell"><span class="k">Document</span><span class="v">PID-SCHEMA</span></div>
+      <div class="tb-cell"><span class="k">Schema ver.</span><span class="v stamp">0.1</span></div>
+      <div class="tb-cell"><span class="k">Date</span><span class="v">2026-06-29</span></div>
+      <div class="tb-cell"><span class="k">Builds on</span><span class="v">PID-FRS · PID-STD-REF</span></div>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <nav class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#intent"><span class="num">00</span>Intent &amp; boundaries</a></li>
+        <li><a href="#tree"><span class="num">01</span>The model at a glance</a></li>
+        <li><a href="#root"><span class="num">02</span>Root &amp; document frame</a></li>
+        <li><a href="#component"><span class="num">03</span>Component record</a></li>
+        <li><a href="#port"><span class="num">04</span>Ports</a></li>
+        <li><a href="#connection"><span class="num">05</span>Connections</a></li>
+        <li><a href="#typical"><span class="num">06</span>Typical definitions</a></li>
+        <li><a href="#example"><span class="num">07</span>Worked example</a></li>
+        <li><a href="#decisions"><span class="num">08</span>Open decisions</a></li>
+        <li><a href="#versioning"><span class="num">09</span>Versioning &amp; DEXPI</a></li>
+      </ol>
+    </nav>
+
+    <main class="content">
+
+      <!-- 00 INTENT -->
+      <section id="intent">
+        <p class="eyebrow"><span class="ec">00</span> What this is</p>
+        <h2 class="sec">Intent &amp; boundaries</h2>
+        <div class="scope">
+          <p>This document fixes the data shape before any code is written. It is the cycle-1 deliverable agreed under the charter: a written schema spec, no implementation. Everything downstream — rendering, tagging, validation, typicals, reports — reads and writes this structure.</p>
+          <p>It answers exactly the seven headings the functional requirements identified (S1 identity, S2 class, S3 two namespaces, S4 ports, S5 connections, S6 typicals, S7 document frame), and nothing more. Behaviour lives in later cycles.</p>
+        </div>
+
+        <h3 class="sub">The one load-bearing rule</h3>
+        <p>The model defined here is the <strong>single source of truth</strong>. The on-screen P&amp;ID is a projection rendered from it. Geometry that drives the picture and engineering data that the database cares about live in the same record but in <em class="term">separate namespaces</em>, so neither contaminates the other.</p>
+
+        <h3 class="sub">Code vs. data — a deliberate split</h3>
+        <p>Two things are easy to confuse. <em class="term">Component types</em> (the gate-valve definition: its schema, default ports, render function) live in the code-side <em class="term">registry</em> and are not part of the saved file. <em class="term">Component instances</em> (this particular valve, here, tagged thus) are data and are saved. A saved model references a type by <code>typeId</code>; it never embeds the type's render logic.</p>
+        <div class="note">
+          <span class="flag">▸ Why the split matters</span>
+          <p>It keeps saved files small and portable, lets a type's symbol be improved without rewriting every saved drawing, and means the field schema a type declares <em>is</em> the future database column set for that class.</p>
+        </div>
+      </section>
+
+      <!-- 01 TREE -->
+      <section id="tree">
+        <p class="eyebrow"><span class="ec">01</span> Orientation</p>
+        <h2 class="sec">The model at a glance</h2>
+        <p>One root object holds everything. Components and connections are flat collections keyed by ID; the document frame and typicals sit alongside them.</p>
+        <div class="tree">
+PidModel
+├── schemaVersion        <span class="cm">"0.1"</span>
+├── project              <span class="cm">name, tagging scheme, defaults</span>
+├── document             <span class="cm">title block, revisions[], notes[]   (S7)</span>
+├── sheets[]             <span class="cm">one per drawing sheet              (S7)</span>
+├── components[]         <span class="cm">instances — graphic + record       (S1–S3)</span>
+│     └── ports[]        <span class="cm">named connection points            (S4)</span>
+├── connections[]        <span class="cm">port-to-port relationships         (S5)</span>
+└── typicalDefs[]        <span class="cm">reusable sub-graphs                (S6)</span>
+        </div>
+        <p>Components do not nest inside one another and connections are not nested inside components. Both are top-level lists that reference each other by ID — the same flat, ID-keyed shape a database uses, which is what makes export a mapping job rather than a rewrite.</p>
+      </section>
+
+      <!-- 02 ROOT -->
+      <section id="root">
+        <p class="eyebrow"><span class="ec">02</span> S7 · the frame</p>
+        <h2 class="sec">Root &amp; document frame</h2>
+
+        <div class="ft-wrap"><table class="ft">
+          <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="fn">schemaVersion</td><td class="ty">string</td><td class="req-y">yes</td><td>Semantic version of this schema, e.g. <code>"0.1"</code>. Drives migration.</td></tr>
+            <tr><td class="fn">project</td><td class="ty">Project</td><td class="req-y">yes</td><td>Project-wide settings; see below.</td></tr>
+            <tr><td class="fn">document</td><td class="ty">Document</td><td class="req-y">yes</td><td>Title-block, revisions and notes for the set.</td></tr>
+            <tr><td class="fn">sheets</td><td class="ty">Sheet[]</td><td class="req-y">yes</td><td>At least one. Components reference a sheet.</td></tr>
+            <tr><td class="fn">components</td><td class="ty">Component[]</td><td class="req-y">yes</td><td>May be empty in a new model.</td></tr>
+            <tr><td class="fn">connections</td><td class="ty">Connection[]</td><td class="req-y">yes</td><td>May be empty.</td></tr>
+            <tr><td class="fn">typicalDefs</td><td class="ty">TypicalDef[]</td><td class="req-n">no</td><td>Reusable sub-graphs; absent until Phase 3.</td></tr>
+          </tbody>
+        </table></div>
+
+        <p><span class="sref">Project</span> carries the active tagging scheme and defaults that the rest of the model leans on:</p>
+        <pre class="cb"><span class="c">// Project</span>
+{
+  <span class="k">"id"</span>: <span class="s">"prj-pinjarra-u1"</span>,
+  <span class="k">"name"</span>: <span class="s">"Pinjarra Unit 1 — CW system"</span>,
+  <span class="k">"taggingScheme"</span>: <span class="s">"KKS"</span>,        <span class="c">// "ISA" | "KKS" | "RDS-PP"   (D1)</span>
+  <span class="k">"defaultUnits"</span>: <span class="s">"mm"</span>,
+  <span class="k">"defaults"</span>: { <span class="k">"service"</span>: <span class="s">null</span>, <span class="k">"pipeClass"</span>: <span class="s">null</span> }
+}</pre>
+
+        <p><span class="sref">Document</span> and its parts mirror the title block, revision table and notes seen on the source drawings — including the practice of lettered general notes versus numbered sheet-specific notes:</p>
+        <pre class="cb"><span class="c">// Document</span>
+{
+  <span class="k">"titleBlock"</span>: {
+    <span class="k">"client"</span>: <span class="s">"…"</span>, <span class="k">"contract"</span>: <span class="s">"…"</span>,
+    <span class="k">"drawingNumber"</span>: <span class="s">"10427-SXO00-XP-024"</span>,
+    <span class="k">"title"</span>: <span class="s">"Cooling Water System"</span>
+  },
+  <span class="k">"revisions"</span>: [
+    { <span class="k">"rev"</span>: <span class="s">"15"</span>, <span class="k">"date"</span>: <span class="s">"…"</span>, <span class="k">"description"</span>: <span class="s">"As constructed"</span>,
+      <span class="k">"by"</span>: <span class="s">"…"</span>, <span class="k">"chk"</span>: <span class="s">"…"</span>, <span class="k">"app"</span>: <span class="s">"…"</span> }
+  ],
+  <span class="k">"notes"</span>: [
+    { <span class="k">"ref"</span>: <span class="s">"A"</span>, <span class="k">"scope"</span>: <span class="s">"general"</span>, <span class="k">"text"</span>: <span class="s">"…"</span> },
+    { <span class="k">"ref"</span>: <span class="s">"1"</span>, <span class="k">"scope"</span>: <span class="s">"sheet"</span>,   <span class="k">"text"</span>: <span class="s">"…"</span> }
+  ]
+}</pre>
+      </section>
+
+      <!-- 03 COMPONENT -->
+      <section id="component">
+        <p class="eyebrow"><span class="ec">03</span> S1 · S2 · S3 · the core record</p>
+        <h2 class="sec">Component record</h2>
+        <p>The heart of the model. Note the three separations: <strong>identity</strong> (a stable ID) is distinct from <strong>tag</strong> (an engineering label that can change); <strong>geometry</strong> (drives the render) is distinct from <strong>domain</strong> (the engineering data). Identity never changes; everything else can.</p>
+
+        <div class="ft-wrap"><table class="ft">
+          <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>S-ref</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="fn">id</td><td class="ty">UUID</td><td class="req-y">yes</td><td><span class="sref">S1</span></td><td>Stable from creation. The future primary key. Never reused.</td></tr>
+            <tr><td class="fn">typeId</td><td class="ty">string</td><td class="req-y">yes</td><td><span class="sref">S2</span></td><td>Reference into the code-side registry, e.g. <code>"valve.gate"</code>. Maps to a DEXPI/ISO 15926 class later.</td></tr>
+            <tr><td class="fn">sheetId</td><td class="ty">string</td><td class="req-y">yes</td><td><span class="sref">S7</span></td><td>Which sheet the instance sits on.</td></tr>
+            <tr><td class="fn">geometry</td><td class="ty">Geometry</td><td class="req-y">yes</td><td><span class="sref">S3</span></td><td>Visual namespace: position, rotation, mirror.</td></tr>
+            <tr><td class="fn">tag</td><td class="ty">Tag</td><td class="req-n">no</td><td><span class="sref">S1</span></td><td><code>{ scheme, value }</code>. Absent until tagged. Separate from <code>id</code>.</td></tr>
+            <tr><td class="fn">domain</td><td class="ty">object</td><td class="req-n">no</td><td><span class="sref">S3</span></td><td>Engineering namespace. Shape defined by the type's field schema.</td></tr>
+            <tr><td class="fn">ports</td><td class="ty">Port[]</td><td class="req-n">no</td><td><span class="sref">S4</span></td><td>Instantiated from the type; may carry per-instance overrides.</td></tr>
+            <tr><td class="fn">typicalInstanceId</td><td class="ty">UUID</td><td class="req-n">no</td><td><span class="sref">S6</span></td><td>Present if this component was placed as part of a typical instance.</td></tr>
+          </tbody>
+        </table></div>
+
+        <pre class="cb"><span class="c">// Component — a gate valve on the cooling-water line</span>
+{
+  <span class="k">"id"</span>: <span class="s">"c-9f2a…"</span>,
+  <span class="k">"typeId"</span>: <span class="s">"valve.gate"</span>,
+  <span class="k">"sheetId"</span>: <span class="s">"sh-024"</span>,
+  <span class="k">"geometry"</span>: { <span class="k">"x"</span>: 420, <span class="k">"y"</span>: 300, <span class="k">"rotation"</span>: 0, <span class="k">"mirrored"</span>: <span class="s">false</span> },
+  <span class="k">"tag"</span>: { <span class="k">"scheme"</span>: <span class="s">"KKS"</span>, <span class="k">"value"</span>: <span class="s">"P1PCC10AA001"</span> },
+  <span class="k">"domain"</span>: { <span class="k">"valveType"</span>: <span class="s">"gate"</span>, <span class="k">"endConnection"</span>: <span class="s">"flanged"</span>,
+              <span class="k">"failAction"</span>: <span class="s">null</span>, <span class="k">"nominalSize"</span>: <span class="s">null</span> },
+  <span class="k">"ports"</span>: [ <span class="c">/* see §04 */</span> ]
+}</pre>
+        <div class="note">
+          <span class="flag">▸ The two-namespace discipline</span>
+          <p>The renderer may read <code>geometry</code> and <code>tag.value</code> only. Reports and the future database read <code>domain</code> and <code>tag</code>. Nothing reads geometry as if it were engineering data, and no engineering datum is inferred from pixel position. This is what keeps the model exportable.</p>
+        </div>
+      </section>
+
+      <!-- 04 PORTS -->
+      <section id="port">
+        <p class="eyebrow"><span class="ec">04</span> S4 · connection points</p>
+        <h2 class="sec">Ports</h2>
+        <p>A port is a named place a connection may attach — an equipment nozzle, a valve end, an instrument tap. Ports carry the attributes that make a typical able to <em>adapt to what it connects to</em>, and the compatibility that lets validation reject illegal joins.</p>
+
+        <div class="ft-wrap"><table class="ft">
+          <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="fn">id</td><td class="ty">string</td><td class="req-y">yes</td><td>Unique within its component, e.g. <code>"in"</code>, <code>"out"</code>, <code>"N1"</code>.</td></tr>
+            <tr><td class="fn">name</td><td class="ty">string</td><td class="req-n">no</td><td>Human label, e.g. "Suction".</td></tr>
+            <tr><td class="fn">kind</td><td class="ty">enum</td><td class="req-y">yes</td><td><code>process</code> | <code>signal</code> | <code>instrument</code> | <code>electrical</code>.</td></tr>
+            <tr><td class="fn">offset</td><td class="ty">{dx,dy}</td><td class="req-y">yes</td><td>Position relative to the component origin (visual).</td></tr>
+            <tr><td class="fn">compatibleKinds</td><td class="ty">enum[]</td><td class="req-n">no</td><td>Which kinds it may join. Drives connection rules (F6, G2).</td></tr>
+            <tr><td class="fn">attributes</td><td class="ty">object</td><td class="req-n">no</td><td><code>{ nominalSize?, service?, pipeClass? }</code> — the values a typical inherits at its boundary (F5).</td></tr>
+          </tbody>
+        </table></div>
+
+        <pre class="cb"><span class="c">// Two process ports on the gate valve</span>
+<span class="k">"ports"</span>: [
+  { <span class="k">"id"</span>: <span class="s">"in"</span>,  <span class="k">"kind"</span>: <span class="s">"process"</span>, <span class="k">"offset"</span>: { <span class="k">"dx"</span>: -12, <span class="k">"dy"</span>: 0 },
+    <span class="k">"compatibleKinds"</span>: [<span class="s">"process"</span>], <span class="k">"attributes"</span>: { <span class="k">"nominalSize"</span>: <span class="s">null</span> } },
+  { <span class="k">"id"</span>: <span class="s">"out"</span>, <span class="k">"kind"</span>: <span class="s">"process"</span>, <span class="k">"offset"</span>: { <span class="k">"dx"</span>:  12, <span class="k">"dy"</span>: 0 },
+    <span class="k">"compatibleKinds"</span>: [<span class="s">"process"</span>], <span class="k">"attributes"</span>: { <span class="k">"nominalSize"</span>: <span class="s">null</span> } }
+]</pre>
+      </section>
+
+      <!-- 05 CONNECTIONS -->
+      <section id="connection">
+        <p class="eyebrow"><span class="ec">05</span> S5 · the topology</p>
+        <h2 class="sec">Connections</h2>
+        <p>A connection is a first-class relationship between two ports — not two lines that happen to touch. For process connections it also carries the line data (number, size, service, class) that a line list is generated from.</p>
+
+        <div class="ft-wrap"><table class="ft">
+          <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="fn">id</td><td class="ty">UUID</td><td class="req-y">yes</td><td>Stable identity for the relationship.</td></tr>
+            <tr><td class="fn">from</td><td class="ty">PortRef</td><td class="req-y">yes</td><td><code>{ componentId, portId }</code>.</td></tr>
+            <tr><td class="fn">to</td><td class="ty">PortRef</td><td class="req-y">yes</td><td><code>{ componentId, portId }</code>.</td></tr>
+            <tr><td class="fn">kind</td><td class="ty">enum</td><td class="req-y">yes</td><td>Must match the ports' kind (validation).</td></tr>
+            <tr><td class="fn">direction</td><td class="ty">enum</td><td class="req-n">no</td><td><code>fromTo</code> | <code>toFrom</code> | <code>bidirectional</code> | <code>none</code>.</td></tr>
+            <tr><td class="fn">line</td><td class="ty">Line</td><td class="req-n">no</td><td>Present for process lines: <code>{ number, nominalSize, service, pipeClass }</code> (E1).</td></tr>
+            <tr><td class="fn">routing</td><td class="ty">{x,y}[]</td><td class="req-n">no</td><td>Optional visual waypoints. Purely geometric.</td></tr>
+          </tbody>
+        </table></div>
+
+        <pre class="cb"><span class="c">// Connection: pump discharge → valve inlet, carrying line data</span>
+{
+  <span class="k">"id"</span>: <span class="s">"x-3b71…"</span>,
+  <span class="k">"from"</span>: { <span class="k">"componentId"</span>: <span class="s">"c-pump…"</span>, <span class="k">"portId"</span>: <span class="s">"disch"</span> },
+  <span class="k">"to"</span>:   { <span class="k">"componentId"</span>: <span class="s">"c-9f2a…"</span>, <span class="k">"portId"</span>: <span class="s">"in"</span> },
+  <span class="k">"kind"</span>: <span class="s">"process"</span>,
+  <span class="k">"direction"</span>: <span class="s">"fromTo"</span>,
+  <span class="k">"line"</span>: { <span class="k">"number"</span>: <span class="s">"300-CWS-024"</span>, <span class="k">"nominalSize"</span>: <span class="s">"DN300"</span>,
+            <span class="k">"service"</span>: <span class="s">"CWS"</span>, <span class="k">"pipeClass"</span>: <span class="s">"…"</span> }
+}</pre>
+      </section>
+
+      <!-- 06 TYPICALS -->
+      <section id="typical">
+        <p class="eyebrow"><span class="ec">06</span> S6 · reuse that adapts</p>
+        <h2 class="sec">Typical definitions</h2>
+        <p>A typical is a saved sub-graph — components, the connections between them, exposed boundary ports, and parameters — kept <em>separate</em> from the instances made from it. Placing one expands it into ordinary components and connections with fresh IDs, sharing a <code>typicalInstanceId</code>, with parameters applied and boundary attributes resolved against whatever it joins.</p>
+
+        <div class="ft-wrap"><table class="ft">
+          <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="fn">id</td><td class="ty">string</td><td class="req-y">yes</td><td>Definition identity, e.g. <code>"typ.cv-station"</code>.</td></tr>
+            <tr><td class="fn">name</td><td class="ty">string</td><td class="req-y">yes</td><td>e.g. "Control valve station w/ bypass".</td></tr>
+            <tr><td class="fn">parameters</td><td class="ty">Param[]</td><td class="req-n">no</td><td><code>{ name, type, default }</code>, set at insertion (F3).</td></tr>
+            <tr><td class="fn">components</td><td class="ty">TemplateComp[]</td><td class="req-y">yes</td><td>Like Component but with relative refs and param placeholders.</td></tr>
+            <tr><td class="fn">connections</td><td class="ty">TemplateConn[]</td><td class="req-y">yes</td><td>Internal topology, by local component ref.</td></tr>
+            <tr><td class="fn">boundaryPorts</td><td class="ty">BoundaryPort[]</td><td class="req-y">yes</td><td><code>{ name, componentRef, portId }</code> — how the typical connects outward (F4).</td></tr>
+          </tbody>
+        </table></div>
+
+        <div class="note">
+          <span class="flag">▸ Definition ≠ instance</span>
+          <p>A placed typical is fully expanded into real components and connections — it is not a live link back to the definition. Editing a definition later does not rewrite placed instances (F7). The <code>typicalInstanceId</code> on each component only records shared provenance, so an instance can be selected, moved, or deleted as a unit.</p>
+        </div>
+      </section>
+
+      <!-- 07 EXAMPLE -->
+      <section id="example">
+        <p class="eyebrow"><span class="ec">07</span> It all fits together</p>
+        <h2 class="sec">Worked example</h2>
+        <p>A minimal but complete model: one cooling-water pump discharging through one gate valve, on one sheet. This is the shape a Phase-0 save/load round-trip (J1) must reproduce losslessly.</p>
+
+        <pre class="cb">{
+  <span class="k">"schemaVersion"</span>: <span class="s">"0.1"</span>,
+  <span class="k">"project"</span>: { <span class="k">"id"</span>: <span class="s">"prj-pinjarra-u1"</span>, <span class="k">"name"</span>: <span class="s">"Pinjarra U1 — CW"</span>,
+                <span class="k">"taggingScheme"</span>: <span class="s">"KKS"</span>, <span class="k">"defaultUnits"</span>: <span class="s">"mm"</span> },
+  <span class="k">"document"</span>: { <span class="k">"titleBlock"</span>: { <span class="k">"drawingNumber"</span>: <span class="s">"10427-SXO00-XP-024"</span>,
+                                 <span class="k">"title"</span>: <span class="s">"Cooling Water System"</span> },
+                 <span class="k">"revisions"</span>: [], <span class="k">"notes"</span>: [] },
+  <span class="k">"sheets"</span>: [ { <span class="k">"id"</span>: <span class="s">"sh-024"</span>, <span class="k">"number"</span>: <span class="s">"XP-024"</span>, <span class="k">"size"</span>: <span class="s">"A1"</span> } ],
+
+  <span class="k">"components"</span>: [
+    {
+      <span class="k">"id"</span>: <span class="s">"c-pump-01"</span>, <span class="k">"typeId"</span>: <span class="s">"equipment.pump.centrifugal"</span>,
+      <span class="k">"sheetId"</span>: <span class="s">"sh-024"</span>,
+      <span class="k">"geometry"</span>: { <span class="k">"x"</span>: 200, <span class="k">"y"</span>: 300, <span class="k">"rotation"</span>: 0, <span class="k">"mirrored"</span>: <span class="s">false</span> },
+      <span class="k">"tag"</span>: { <span class="k">"scheme"</span>: <span class="s">"KKS"</span>, <span class="k">"value"</span>: <span class="s">"P1PCC10AP010"</span> },
+      <span class="k">"domain"</span>: { <span class="k">"service"</span>: <span class="s">"Cooling water pump 1"</span>, <span class="k">"ratedFlow"</span>: <span class="s">"946 m³/h"</span> },
+      <span class="k">"ports"</span>: [
+        { <span class="k">"id"</span>: <span class="s">"suct"</span>,  <span class="k">"kind"</span>: <span class="s">"process"</span>, <span class="k">"offset"</span>: { <span class="k">"dx"</span>: -20, <span class="k">"dy"</span>: 0 } },
+        { <span class="k">"id"</span>: <span class="s">"disch"</span>, <span class="k">"kind"</span>: <span class="s">"process"</span>, <span class="k">"offset"</span>: { <span class="k">"dx"</span>:  20, <span class="k">"dy"</span>: 0 } }
+      ]
+    },
+    {
+      <span class="k">"id"</span>: <span class="s">"c-valve-01"</span>, <span class="k">"typeId"</span>: <span class="s">"valve.gate"</span>, <span class="k">"sheetId"</span>: <span class="s">"sh-024"</span>,
+      <span class="k">"geometry"</span>: { <span class="k">"x"</span>: 420, <span class="k">"y"</span>: 300, <span class="k">"rotation"</span>: 0, <span class="k">"mirrored"</span>: <span class="s">false</span> },
+      <span class="k">"tag"</span>: { <span class="k">"scheme"</span>: <span class="s">"KKS"</span>, <span class="k">"value"</span>: <span class="s">"P1PCC10AA001"</span> },
+      <span class="k">"domain"</span>: { <span class="k">"valveType"</span>: <span class="s">"gate"</span>, <span class="k">"endConnection"</span>: <span class="s">"flanged"</span> },
+      <span class="k">"ports"</span>: [
+        { <span class="k">"id"</span>: <span class="s">"in"</span>,  <span class="k">"kind"</span>: <span class="s">"process"</span>, <span class="k">"offset"</span>: { <span class="k">"dx"</span>: -12, <span class="k">"dy"</span>: 0 } },
+        { <span class="k">"id"</span>: <span class="s">"out"</span>, <span class="k">"kind"</span>: <span class="s">"process"</span>, <span class="k">"offset"</span>: { <span class="k">"dx"</span>:  12, <span class="k">"dy"</span>: 0 } }
+      ]
+    }
+  ],
+
+  <span class="k">"connections"</span>: [
+    {
+      <span class="k">"id"</span>: <span class="s">"x-01"</span>,
+      <span class="k">"from"</span>: { <span class="k">"componentId"</span>: <span class="s">"c-pump-01"</span>,  <span class="k">"portId"</span>: <span class="s">"disch"</span> },
+      <span class="k">"to"</span>:   { <span class="k">"componentId"</span>: <span class="s">"c-valve-01"</span>, <span class="k">"portId"</span>: <span class="s">"in"</span> },
+      <span class="k">"kind"</span>: <span class="s">"process"</span>, <span class="k">"direction"</span>: <span class="s">"fromTo"</span>,
+      <span class="k">"line"</span>: { <span class="k">"number"</span>: <span class="s">"300-CWS-024"</span>, <span class="k">"nominalSize"</span>: <span class="s">"DN300"</span>, <span class="k">"service"</span>: <span class="s">"CWS"</span> }
+    }
+  ],
+
+  <span class="k">"typicalDefs"</span>: []
+}</pre>
+        <div class="note">
+          <span class="flag">▸ Round-trip is the Phase-0 test</span>
+          <p>Parse this JSON → build the in-memory model → serialise it back → the two JSON texts are equivalent. That single assertion is the first self-test (J1) and proves the source-of-truth model holds together before any pixel is drawn.</p>
+        </div>
+      </section>
+
+      <!-- 08 DECISIONS -->
+      <section id="decisions">
+        <p class="eyebrow"><span class="ec">08</span> Calls made — and still open</p>
+        <h2 class="sec">Open decisions</h2>
+        <p>Three choices are baked into the above and worth your explicit sign-off, because each has a defensible alternative.</p>
+
+        <div class="decision">
+          <span class="flag">◢ Decision 1 — a line is a connection, not an object</span>
+          <p>A pipe is modelled as a <code>connection</code> carrying line data, not as its own component. This keeps topology first-class and the model simple.</p>
+          <p><strong>Trade-off:</strong> a single physical line running through several in-line items (valve, reducer, tee) becomes several connection segments. A later "line group" concept may be needed to treat them as one line for the line list. Acceptable for Phases 0–2; flag if you'd rather model a pipe segment as a component now.</p>
+        </div>
+
+        <div class="decision">
+          <span class="flag">◢ Decision 2 — the type registry is code, not data</span>
+          <p>Type definitions (schema, default ports, render) live in code; saved files reference them by <code>typeId</code>. Portable and small.</p>
+          <p><strong>Trade-off:</strong> a saved file opened against a newer build could meet a <code>typeId</code> whose schema has changed. Mitigated by <code>schemaVersion</code> and migration (§09), but worth noting that files are not fully self-describing without the code.</p>
+        </div>
+
+        <div class="decision">
+          <span class="flag">◢ Decision 3 — IDs are opaque UUIDs, tags are separate</span>
+          <p>Identity is a UUID assigned at creation; the engineering tag is a separate, editable field. A component can exist untagged.</p>
+          <p><strong>Trade-off:</strong> two identifiers to carry. The payoff is that re-tagging never breaks connections or references — which is the whole point of S1.</p>
+        </div>
+      </section>
+
+      <!-- 09 VERSIONING -->
+      <section id="versioning">
+        <p class="eyebrow"><span class="ec">09</span> Forward compatibility</p>
+        <h2 class="sec">Versioning &amp; DEXPI alignment</h2>
+        <p><code>schemaVersion</code> is checked on load. A loader for an older version runs a migration to the current shape before the model is used; migrations are additive where possible and never silently drop data. Bump the minor version for additive fields, the major for breaking changes.</p>
+        <p>The structure deliberately mirrors how DEXPI carries a P&amp;ID, so a future export (J3) is a field-mapping exercise, not a redesign:</p>
+        <div class="ft-wrap"><table class="ft">
+          <thead><tr><th>This schema</th><th>Maps toward (DEXPI / ISO 15926)</th></tr></thead>
+          <tbody>
+            <tr><td class="fn">component.typeId</td><td>Equipment / Piping component class</td></tr>
+            <tr><td class="fn">component.domain.*</td><td>GenericAttributes on the object</td></tr>
+            <tr><td class="fn">connection (+ line)</td><td>PipingNetworkSegment / signal line, with topology</td></tr>
+            <tr><td class="fn">port</td><td>Nozzle / connection point</td></tr>
+            <tr><td class="fn">tag</td><td>Object identifier / designation</td></tr>
+          </tbody>
+        </table></div>
+        <div class="note">
+          <span class="flag">▸ Not now</span>
+          <p>No DEXPI vocabulary is adopted at version 0.1 — only the <em>shape</em> is kept compatible. Committing field names to DEXPI classes is a later cycle, and one to do deliberately rather than by accident.</p>
+        </div>
+      </section>
+
+      <!-- SOURCES -->
+      <section id="sources" class="sources">
+        <p class="eyebrow"><span class="ec">—</span> References</p>
+        <h2 class="sec">Sources &amp; notes</h2>
+        <ul>
+          <li><span class="tag">Internal</span><span>S1–S7 derive from PID-FRS §06; the source-of-truth principle and tagging schemes from PID-STD-REF.</span></li>
+          <li><span class="tag">Grounding</span><span>Tags, drawing number and service in the worked example follow the Pinjarra Unit 1 cooling-water sheet (XP-024) as a realistic shape; values are illustrative, not transcribed.</span></li>
+        </ul>
+        <p class="disclaimer">Schema version 0.1, for review. Field names and the three open decisions are provisional until signed off at the gate. Once accepted, this becomes the contract that Phase 0 implements against, and changes to it follow the charter's one-change-at-a-time rule like any other.</p>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    <span>P&amp;ID AUTHORING TOOL · DATA SCHEMA · v0.1</span>
+    <span>FOR REVIEW</span>
+    <span>2026-06-29</span>
+  </footer>
+
+</div>
+</body>
+</html>
